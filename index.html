@@ -3,143 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FitPlan</title>
+<title>FitPlan Pro</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
 body{
-  font-family:-apple-system,BlinkMacSystemFont;
+  margin:0;
+  font-family:-apple-system;
   background:#0c0c0f;
   color:#fff;
 }
 
 .app{
-  max-width:500px;
+  max-width:520px;
   margin:auto;
-  padding:24px 20px 100px;
+  padding:30px 20px 120px;
 }
 
-/* HEADER */
-.header{
-  margin-bottom:30px;
-}
-.title{
-  font-size:34px;
-  font-weight:800;
-}
-.subtitle{
-  color:#8a8a8a;
-  margin-top:6px;
-}
+h1{font-size:34px;margin-bottom:5px}
+.sub{color:#777;margin-bottom:20px}
 
-/* PROGRESS */
-.progress{
-  height:5px;
-  background:#1c1c22;
-  border-radius:10px;
-  overflow:hidden;
-  margin:25px 0;
-}
-.bar{
-  height:100%;
-  width:20%;
-  background:#4cffc3;
-  transition:.4s;
-}
+.progress{height:6px;background:#1a1a1a;border-radius:10px;margin-bottom:25px}
+.bar{height:100%;width:20%;background:#00e0a4;border-radius:10px;transition:.4s}
 
-/* STEPS */
-.step{
-  display:none;
-  animation:fade .35s ease;
-}
+.step{display:none}
 .step.active{display:block}
 
-@keyframes fade{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1;transform:translateY(0)}
-}
+.grid{display:grid;gap:14px}
 
-/* GRID */
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-}
-
-/* CARD */
 .card{
   background:#16161c;
+  padding:20px;
+  border-radius:16px;
   border:2px solid transparent;
-  padding:22px 12px;
-  border-radius:18px;
-  text-align:center;
   cursor:pointer;
-  transition:.2s;
 }
-.card:hover{border-color:#4cffc3}
-.card.active{
-  border-color:#4cffc3;
-  background:#1f2a28;
-}
+.card.active{border-color:#00e0a4;background:#1f2a28}
 
-.icon{font-size:30px;margin-bottom:8px}
-.label{font-size:15px;font-weight:600}
-
-/* BUTTON */
 .btn{
   width:100%;
+  margin-top:20px;
   padding:16px;
-  margin-top:22px;
-  border-radius:14px;
   border:none;
-  font-weight:700;
-  font-size:15px;
-  background:#4cffc3;
+  border-radius:14px;
+  background:#00e0a4;
   color:#000;
-  cursor:pointer;
+  font-weight:700;
 }
-.btn:disabled{
-  background:#2a2a2f;
-  color:#555;
-}
+.btn:disabled{background:#333;color:#666}
 
-/* RESULT */
-.result-card{
+.section{
   background:#16161c;
-  border-radius:20px;
-  padding:22px;
-  margin-bottom:14px;
-  border:1px solid #222;
+  padding:18px;
+  border-radius:18px;
+  margin-bottom:15px;
 }
 
-.result-title{
-  font-size:20px;
-  font-weight:700;
-  margin-bottom:6px;
+.exercise{
+  padding:10px 0;
+  border-bottom:1px solid #222;
 }
 
-.badge{
-  display:inline-block;
-  background:#4cffc3;
-  color:#000;
-  padding:6px 10px;
-  border-radius:10px;
-  font-size:12px;
-  font-weight:700;
-  margin-right:6px;
-}
-
-/* ACCOUNT */
-.account{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
+.level{
+  margin-top:10px;
+  padding:12px;
   background:#111;
-  border-top:1px solid #222;
-  padding:14px;
-  text-align:center;
-  font-size:13px;
+  border-radius:12px;
+  border-left:4px solid #00e0a4;
 }
 </style>
 </head>
@@ -148,122 +77,134 @@ body{
 
 <div class="app">
 
-<div class="header">
-  <div class="title">FitPlan</div>
-  <div class="subtitle">Twój plan treningowy AI</div>
-</div>
+<h1>FitPlan</h1>
+<div class="sub">Plan dopasowany do Ciebie</div>
 
 <div class="progress"><div class="bar" id="bar"></div></div>
 
 <!-- STEP 1 -->
 <div class="step active" id="step1">
-  <h2>Kim jesteś?</h2>
-  <div class="grid">
-    <div class="card" onclick="select(1,'kobieta',this)">👩<div>Kobieta</div></div>
-    <div class="card" onclick="select(1,'mezczyzna',this)">👨<div>Mężczyzna</div></div>
-  </div>
-  <button class="btn" id="next1" disabled onclick="next()">Dalej</button>
+<h2>Płeć</h2>
+<div class="grid">
+<div class="card" onclick="select(1,'kobieta',this)">👩 Kobieta</div>
+<div class="card" onclick="select(1,'mezczyzna',this)">👨 Mężczyzna</div>
+</div>
+<button class="btn" id="next1" disabled onclick="next()">Dalej</button>
 </div>
 
 <!-- STEP 2 -->
 <div class="step" id="step2">
-  <h2>Co chcesz rozwinąć?</h2>
-  <div class="grid" id="goals"></div>
-  <button class="btn" id="next2" disabled onclick="next()">Dalej</button>
+<h2>Cel</h2>
+<div class="grid" id="goals"></div>
+<button class="btn" id="next2" disabled onclick="next()">Dalej</button>
 </div>
 
 <!-- STEP 3 -->
 <div class="step" id="step3">
-  <h2>Twój poziom</h2>
-  <div class="grid">
-    <div class="card" onclick="select(3,'poczatkujacy',this)">🌱 Start</div>
-    <div class="card" onclick="select(3,'sredni',this)">💪 Średni</div>
-    <div class="card" onclick="select(3,'pro',this)">🔥 PRO</div>
-  </div>
-  <button class="btn" id="next3" disabled onclick="finish()">Generuj</button>
+<h2>Poziom</h2>
+<div class="grid">
+<div class="card" onclick="select(3,'poczatkujacy',this)">Początkujący</div>
+<div class="card" onclick="select(3,'sredni',this)">Średni</div>
+<div class="card" onclick="select(3,'zaawansowany',this)">Zaawansowany</div>
+</div>
+<button class="btn" id="next3" disabled onclick="finish()">Generuj</button>
 </div>
 
 <!-- RESULT -->
-<div class="step" id="result">
-  <div class="result-card">
-    <div class="result-title">Twój plan</div>
-    <div id="badges"></div>
-  </div>
-
-  <div class="result-card">
-    <div class="result-title">Opis</div>
-    <p id="desc"></p>
-  </div>
-</div>
+<div class="step" id="result"></div>
 
 </div>
-
-<div class="account" id="account"></div>
 
 <script>
 let step=1;
 let answers={};
 
 const GOALS={
-kobieta:["🍑 Pośladki","⚡ Brzuch","✨ Całe ciało","💪 Ramiona"],
-mezczyzna:["🦁 Klatka","💪 Plecy","🦵 Nogi","🔱 Barki"]
+kobieta:["🍑 Pośladki","⚡ Brzuch","✨ Całe ciało","💪 Góra ciała","🦵 Dół ciała"],
+mezczyzna:["🦁 Klatka","💪 Plecy","🦵 Nogi","🔥 Góra ciała","⚡ Całe ciało"]
+};
+
+const PLANS={
+"🍑 Pośladki":[
+["Hip Thrust 4x12","RDL 4x10","Wykroki 3x10","Kickback 3x12"],
+["Hip Thrust 5x10","Przysiad 4x8","RDL 4x10","Odwodzenie 3x15"],
+["Hip Thrust ciężko 5x5","Przysiad 5x5","RDL 5x8","Glute bridge 4x12"]
+],
+
+"💪 Plecy":[
+["Ściąganie drążka 4x12","Wiosłowanie 3x12","Face pull 3x15"],
+["Podciąganie 4x8","Wiosłowanie 4x10","Face pull 3x15"],
+["Podciąganie z ciężarem","Wiosłowanie ciężko","Martwy ciąg"]
+],
+
+"🔥 Góra ciała":[
+["Pompki","Wiosłowanie","Plank"],
+["Wyciskanie","Podciąganie","Barki"],
+["Bench press","OHP","Pull up + ciężar"]
+],
+
+"⚡ Całe ciało":[
+["Przysiad","Pompki","Plank"],
+["Przysiad + ciężar","Wyciskanie","Wiosło"],
+["Full body heavy split"]
+]
 };
 
 function select(s,val,el){
-  answers[s]=val;
-  document.querySelectorAll(`#step${s} .card`).forEach(c=>c.classList.remove("active"));
-  el.classList.add("active");
-  document.getElementById("next"+s).disabled=false;
+answers[s]=val;
+document.querySelectorAll(`#step${s} .card`).forEach(c=>c.classList.remove("active"));
+el.classList.add("active");
+document.getElementById("next"+s).disabled=false;
 
-  if(s===1) renderGoals();
+if(s===1) renderGoals();
 }
 
 function renderGoals(){
-  const box=document.getElementById("goals");
-  box.innerHTML="";
-  GOALS[answers[1]].forEach(g=>{
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=g;
-    div.onclick=()=>select(2,g,div);
-    box.appendChild(div);
-  });
+let box=document.getElementById("goals");
+box.innerHTML="";
+GOALS[answers[1]].forEach(g=>{
+let d=document.createElement("div");
+d.className="card";
+d.innerText=g;
+d.onclick=()=>select(2,g,d);
+box.appendChild(d);
+});
 }
 
 function next(){
-  document.getElementById("step"+step).classList.remove("active");
-  step++;
-  document.getElementById("step"+step).classList.add("active");
-  document.getElementById("bar").style.width=(step*33)+"%";
+document.getElementById("step"+step).classList.remove("active");
+step++;
+document.getElementById("step"+step).classList.add("active");
+document.getElementById("bar").style.width=(step*33)+"%";
 }
 
 function finish(){
-  localStorage.setItem("fitplan",JSON.stringify(answers));
+document.getElementById("step"+step).classList.remove("active");
+document.getElementById("result").classList.add("active");
 
-  document.getElementById("step"+step).classList.remove("active");
-  document.getElementById("result").classList.add("active");
+let goal=answers[2];
+let levelIndex = answers[3]==="poczatkujacy"?0:answers[3]==="sredni"?1:2;
+let plan = PLANS[goal] || PLANS["⚡ Całe ciało"];
 
-  document.getElementById("badges").innerHTML=`
-    <span class="badge">${answers[1]}</span>
-    <span class="badge">${answers[2]}</span>
-    <span class="badge">${answers[3]}</span>
-  `;
+let html = `
+<div class="section">
+<h2>${goal}</h2>
+</div>
+`;
 
-  document.getElementById("desc").innerText="Plan dopasowany pod Twoje cele. Kolejny krok: wdrożenie treningu i progres.";
-  updateAccount();
+["Początkujący","Średni","Zaawansowany"].forEach((lvl,i)=>{
+html+=`
+<div class="section">
+<h3>${lvl}</h3>
+<div class="level">
+${plan[i].map(e=>`<div class="exercise">${e}</div>`).join("")}
+</div>
+</div>
+`;
+});
+
+document.getElementById("result").innerHTML=html;
 }
-
-function updateAccount(){
-  const data=JSON.parse(localStorage.getItem("fitplan"));
-  if(!data){
-    document.getElementById("account").innerText="Nie zapisano planu";
-    return;
-  }
-  document.getElementById("account").innerText=
-    "Zapisany plan: "+data[2]+" | "+data[3];
-}
-
-updateAccount();
 </script>
 
 </body>

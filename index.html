@@ -1,202 +1,531 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>FitPlan Pro</title>
 
 <style>
-body{
-  margin:0;
-  font-family:-apple-system;
-  background:#2b2b2f;
-  color:#fff;
+:root {
+  --bg: #111;
+  --card: #1b1b1b;
+  --border: #2a2a2a;
+  --text: #f5f5f5;
+  --sub: #888;
+  --accent: #00e0ff;
 }
 
-.app{
-  max-width:650px;
-  margin:auto;
-  padding:30px 20px 120px;
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui;
+  background: var(--bg);
+  color: var(--text);
 }
 
-h1{font-size:36px;margin-bottom:5px}
-.sub{color:#aaa;margin-bottom:20px}
-
-.progress{height:6px;background:#444;border-radius:10px;margin-bottom:25px}
-.bar{height:100%;width:20%;background:#00ffae;border-radius:10px;transition:.4s}
-
-.step{display:none}
-.step.active{display:block}
-
-.grid{display:grid;gap:14px}
-
-.card{
-  background:#3a3a3f;
-  padding:22px;
-  border-radius:18px;
-  border:2px solid transparent;
-  cursor:pointer;
-  font-size:18px;
-}
-.card.active{border-color:#00ffae;background:#3f4a47}
-
-.btn{
-  width:100%;
-  margin-top:20px;
-  padding:18px;
-  border:none;
-  border-radius:16px;
-  background:#00ffae;
-  color:#000;
-  font-weight:800;
-  font-size:16px;
-}
-.btn:disabled{background:#555;color:#999}
-
-.section{
-  background:#3a3a3f;
-  padding:20px;
-  border-radius:20px;
-  margin-bottom:16px;
+.container {
+  max-width: 700px;
+  margin: auto;
+  padding: 20px;
 }
 
-.exercise{
-  padding:12px 0;
-  border-bottom:1px solid #555;
-  font-size:15px;
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: 0.2s;
 }
 
-.day{
-  margin-top:10px;
-  padding:12px;
-  background:#2f2f34;
-  border-radius:12px;
-  border-left:5px solid #00ffae;
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 10px;
 }
 
-.level{
-  margin-top:12px;
+.btn {
+  padding: 14px;
+  border-radius: 999px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  background: var(--accent);
+  color: #000;
+  width: 100%;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.option {
+  padding: 18px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.option.active {
+  border-color: var(--accent);
+  background: rgba(0,224,255,0.08);
+}
+
+.small { font-size: 13px; color: var(--sub); }
+
+input {
+  width: 100%;
+  padding: 12px;
+  background: #111;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: white;
+  margin-top: 8px;
 }
 </style>
 </head>
 
 <body>
-
-<div class="app">
-
-<h1>FitPlan</h1>
-<div class="sub">Profesjonalny plan treningowy</div>
-
-<div class="progress"><div class="bar" id="bar"></div></div>
-
-<!-- STEP 1 -->
-<div class="step active" id="step1">
-<h2>Płeć</h2>
-<div class="grid">
-<div class="card" onclick="select(1,'kobieta',this)">👩 Kobieta</div>
-<div class="card" onclick="select(1,'mezczyzna',this)">👨 Mężczyzna</div>
-</div>
-<button class="btn" id="next1" disabled onclick="next()">Dalej</button>
-</div>
-
-<!-- STEP 2 -->
-<div class="step" id="step2">
-<h2>Cel</h2>
-<div class="grid" id="goals"></div>
-<button class="btn" id="next2" disabled onclick="next()">Dalej</button>
-</div>
-
-<!-- STEP 3 -->
-<div class="step" id="step3">
-<h2>Poziom</h2>
-<div class="grid">
-<div class="card" onclick="select(3,'poczatkujacy',this)">Początkujący</div>
-<div class="card" onclick="select(3,'sredni',this)">Średni</div>
-<div class="card" onclick="select(3,'zaawansowany',this)">Zaawansowany</div>
-</div>
-<button class="btn" id="next3" disabled onclick="finish()">Generuj plan</button>
-</div>
-
-<!-- RESULT -->
-<div class="step" id="result"></div>
-
-</div>
+<div class="container" id="app"></div>
 
 <script>
-let step=1;
-let answers={};
-
-const GOALS={
-kobieta:["🍑 Pośladki","💪 Góra ciała","🦵 Dół ciała","✨ Całe ciało"],
-mezczyzna:["💪 Góra ciała","🦵 Nogi","🔥 Masa","⚡ Całe ciało"]
+let state = JSON.parse(localStorage.getItem("fitapp")) || {
+  user: null,
+  plan: null,
+  progress: {}
 };
 
-function select(s,val,el){
-answers[s]=val;
-document.querySelectorAll(`#step${s} .card`).forEach(c=>c.classList.remove("active"));
-el.classList.add("active");
-document.getElementById("next"+s).disabled=false;
-if(s===1) renderGoals();
+function save() {
+  localStorage.setItem("fitapp", JSON.stringify(state));
 }
 
-function renderGoals(){
-let box=document.getElementById("goals");
-box.innerHTML="";
-GOALS[answers[1]].forEach(g=>{
-let d=document.createElement("div");
-d.className="card";
-d.innerText=g;
-d.onclick=()=>select(2,g,d);
-box.appendChild(d);
-});
+function setUser(data) {
+  state.user = data;
+  save();
+  renderDashboard();
 }
 
-function next(){
-document.getElementById("step"+step).classList.remove("active");
-step++;
-document.getElementById("step"+step).classList.add("active");
-document.getElementById("bar").style.width=(step*33)+"%";
+function selectOption(el, key, value) {
+  document.querySelectorAll(`[data-${key}]`).forEach(e => e.classList.remove("active"));
+  el.classList.add("active");
+  state[key] = value;
 }
 
-function finish(){
-document.getElementById("step"+step).classList.remove("active");
-document.getElementById("result").classList.add("active");
+function generatePlan() {
+  const plan = {
+    name: "Plan: Góra ciała (siła + masa)",
+    workouts: [
+      {
+        name: "Push",
+        exercises: [
+          { name: "Wyciskanie sztangi", sets: 5, reps: "5" },
+          { name: "Wyciskanie hantli skos", sets: 4, reps: "10" },
+          { name: "OHP", sets: 4, reps: "8" },
+          { name: "Dipy", sets: 3, reps: "max" },
+          { name: "Triceps linka", sets: 3, reps: "12" }
+        ]
+      },
+      {
+        name: "Pull",
+        exercises: [
+          { name: "Podciąganie", sets: 4, reps: "max" },
+          { name: "Wiosłowanie sztangą", sets: 5, reps: "5" },
+          { name: "Face pull", sets: 3, reps: "15" },
+          { name: "Biceps hantle", sets: 3, reps: "12" }
+        ]
+      }
+    ]
+  };
 
-let html="";
-
-html+=createLevel("Początkujący",[
-["Dzień 1 – Full Body","Przysiad 3x12","Wyciskanie hantli 3x12","Wiosłowanie 3x12","Hip thrust 3x12","Plank 3x30s"],
-["Dzień 2 – Full Body","Martwy ciąg 3x10","Pompki 3x10","Ściąganie drążka 3x12","Wykroki 3x10","Brzuch 3x15"]
-]);
-
-html+=createLevel("Średni",[
-["Dzień 1 – Góra","Wyciskanie sztangi 4x8","Podciąganie 4x8","OHP 3x10","Biceps 3x12","Triceps 3x12"],
-["Dzień 2 – Dół","Przysiad 4x8","RDL 4x10","Leg press 3x12","Łydki 4x15"],
-["Dzień 3 – Mix","Hip thrust 4x10","Wiosłowanie 4x10","Face pull 3x15","Core 3x15"]
-]);
-
-html+=createLevel("Zaawansowany",[
-["Push","Bench press 5x5","Incline DB 4x8","OHP 4x8","Triceps 4x12"],
-["Pull","Podciąganie 5x5","Wiosłowanie 4x8","Face pull 4x15","Biceps 4x12"],
-["Legs","Przysiad 5x5","RDL 4x8","Leg press 4x12","Łydki 5x15"]
-]);
-
-document.getElementById("result").innerHTML=html;
+  state.plan = plan;
+  save();
+  renderPlan();
 }
 
-function createLevel(name,days){
-let html=`<div class="section"><h2>${name}</h2>`;
-days.forEach(d=>{
-html+=`<div class="day"><b>${d[0]}</b>`;
-d.slice(1).forEach(e=>{
-html+=`<div class="exercise">${e}</div>`;
-});
-html+=`</div>`;
-});
-html+=`</div>`;
-return html;
+function renderAuth() {
+  app.innerHTML = `
+    <div class="card">
+      <div class="title">Stwórz konto</div>
+      <input id="name" placeholder="Imię">
+      <input id="weight" placeholder="Waga (kg)">
+      <button class="btn" onclick="setUser({
+        name: name.value,
+        weight: weight.value
+      })">Start</button>
+    </div>
+  `;
 }
+
+function renderDashboard() {
+  app.innerHTML = `
+    <div class="card">
+      <div class="title">Cześć ${state.user.name} 👋</div>
+      <div class="small">Twoja waga: ${state.user.weight} kg</div>
+    </div>
+
+    <div class="card">
+      <div class="title">Twój plan</div>
+      <button class="btn" onclick="renderGenerator()">Generuj plan</button>
+    </div>
+  `;
+}
+
+function renderGenerator() {
+  app.innerHTML = `
+    <div class="card">
+      <div class="title">Wybierz cel</div>
+      <div class="grid">
+        <div class="option" onclick="selectOption(this,'goal','gora')" data-goal>Góra</div>
+        <div class="option" onclick="selectOption(this,'goal','dol')" data-goal>Dół</div>
+        <div class="option" onclick="selectOption(this,'goal','masa')" data-goal>Masa</div>
+        <div class="option" onclick="selectOption(this,'goal','redukcja')" data-goal>Redukcja</div>
+      </div>
+      <button class="btn" onclick="generatePlan()">Generuj</button>
+    </div>
+  `;
+}
+
+function renderPlan() {
+  const p = state.plan;
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="title">${p.name}</div>
+      <button class="btn" onclick="startWorkout()">Start trening</button>
+    </div>
+    ${p.workouts.map(w => `
+      <div class="card">
+        <b>${w.name}</b>
+        ${w.exercises.map(e => `
+          <div style="margin-top:8px;">
+            ${e.name} — ${e.sets} x ${e.reps}
+          </div>
+        `).join("")}
+      </div>
+    `).join("")}
+  `;
+}
+
+let currentWorkout = 0;
+let currentExercise = 0;
+
+function startWorkout() {
+  currentWorkout = 0;
+  currentExercise = 0;
+  renderWorkout();
+}
+
+function renderWorkout() {
+  const w = state.plan.workouts[currentWorkout];
+  const e = w.exercises[currentExercise];
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="title">${w.name}</div>
+      <div style="font-size:22px;margin:10px 0;">${e.name}</div>
+      <div>${e.sets} serii x ${e.reps}</div>
+      <input placeholder="Ciężar (kg)" id="kg">
+      <button class="btn" onclick="nextExercise()">Dalej</button>
+    </div>
+  `;
+}
+
+function nextExercise() {
+  currentExercise++;
+  const w = state.plan.workouts[currentWorkout];
+
+  if (currentExercise >= w.exercises.length) {
+    currentWorkout++;
+    currentExercise = 0;
+  }
+
+  if (currentWorkout >= state.plan.workouts.length) {
+    renderDashboard();
+    return;
+  }
+
+  renderWorkout();
+}
+
+function init() {
+  if (!state.user) return renderAuth();
+  if (!state.plan) return renderDashboard();
+  renderPlan();
+}
+
+init();
 </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FitPlan Pro</title>
 
+<style>
+:root {
+  --bg: #111;
+  --card: #1b1b1b;
+  --border: #2a2a2a;
+  --text: #f5f5f5;
+  --sub: #888;
+  --accent: #00e0ff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.container {
+  max-width: 700px;
+  margin: auto;
+  padding: 20px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: 0.2s;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.btn {
+  padding: 14px;
+  border-radius: 999px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  background: var(--accent);
+  color: #000;
+  width: 100%;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.option {
+  padding: 18px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.option.active {
+  border-color: var(--accent);
+  background: rgba(0,224,255,0.08);
+}
+
+.small { font-size: 13px; color: var(--sub); }
+
+input {
+  width: 100%;
+  padding: 12px;
+  background: #111;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: white;
+  margin-top: 8px;
+}
+</style>
+</head>
+
+<body>
+<div class="container" id="app"></div>
+
+<script>
+let state = JSON.parse(localStorage.getItem("fitapp")) || {
+  user: null,
+  plan: null,
+  progress: {}
+};
+
+function save() {
+  localStorage.setItem("fitapp", JSON.stringify(state));
+}
+
+function setUser(data) {
+  state.user = data;
+  save();
+  renderDashboard();
+}
+
+function selectOption(el, key, value) {
+  document.querySelectorAll(`[data-${key}]`).forEach(e => e.classList.remove("active"));
+  el.classList.add("active");
+  state[key] = value;
+}
+
+function generatePlan() {
+  const plan = {
+    name: "Plan: Góra ciała (siła + masa)",
+    workouts: [
+      {
+        name: "Push",
+        exercises: [
+          { name: "Wyciskanie sztangi", sets: 5, reps: "5" },
+          { name: "Wyciskanie hantli skos", sets: 4, reps: "10" },
+          { name: "OHP", sets: 4, reps: "8" },
+          { name: "Dipy", sets: 3, reps: "max" },
+          { name: "Triceps linka", sets: 3, reps: "12" }
+        ]
+      },
+      {
+        name: "Pull",
+        exercises: [
+          { name: "Podciąganie", sets: 4, reps: "max" },
+          { name: "Wiosłowanie sztangą", sets: 5, reps: "5" },
+          { name: "Face pull", sets: 3, reps: "15" },
+          { name: "Biceps hantle", sets: 3, reps: "12" }
+        ]
+      }
+    ]
+  };
+
+  state.plan = plan;
+  save();
+  renderPlan();
+}
+
+function renderAuth() {
+  app.innerHTML = `
+    <div class="card">
+      <div class="title">Stwórz konto</div>
+      <input id="name" placeholder="Imię">
+      <input id="weight" placeholder="Waga (kg)">
+      <button class="btn" onclick="setUser({
+        name: name.value,
+        weight: weight.value
+      })">Start</button>
+    </div>
+  `;
+}
+
+function renderDashboard() {
+  app.innerHTML = `
+    <div class="card">
+      <div class="title">Cześć ${state.user.name} 👋</div>
+      <div class="small">Twoja waga: ${state.user.weight} kg</div>
+    </div>
+
+    <div class="card">
+      <div class="title">Twój plan</div>
+      <button class="btn" onclick="renderGenerator()">Generuj plan</button>
+    </div>
+  `;
+}
+
+function renderGenerator() {
+  app.innerHTML = `
+    <div class="card">
+      <div class="title">Wybierz cel</div>
+      <div class="grid">
+        <div class="option" onclick="selectOption(this,'goal','gora')" data-goal>Góra</div>
+        <div class="option" onclick="selectOption(this,'goal','dol')" data-goal>Dół</div>
+        <div class="option" onclick="selectOption(this,'goal','masa')" data-goal>Masa</div>
+        <div class="option" onclick="selectOption(this,'goal','redukcja')" data-goal>Redukcja</div>
+      </div>
+      <button class="btn" onclick="generatePlan()">Generuj</button>
+    </div>
+  `;
+}
+
+function renderPlan() {
+  const p = state.plan;
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="title">${p.name}</div>
+      <button class="btn" onclick="startWorkout()">Start trening</button>
+    </div>
+    ${p.workouts.map(w => `
+      <div class="card">
+        <b>${w.name}</b>
+        ${w.exercises.map(e => `
+          <div style="margin-top:8px;">
+            ${e.name} — ${e.sets} x ${e.reps}
+          </div>
+        `).join("")}
+      </div>
+    `).join("")}
+  `;
+}
+
+let currentWorkout = 0;
+let currentExercise = 0;
+
+function startWorkout() {
+  currentWorkout = 0;
+  currentExercise = 0;
+  renderWorkout();
+}
+
+function renderWorkout() {
+  const w = state.plan.workouts[currentWorkout];
+  const e = w.exercises[currentExercise];
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="title">${w.name}</div>
+      <div style="font-size:22px;margin:10px 0;">${e.name}</div>
+      <div>${e.sets} serii x ${e.reps}</div>
+      <input placeholder="Ciężar (kg)" id="kg">
+      <button class="btn" onclick="nextExercise()">Dalej</button>
+    </div>
+  `;
+}
+
+function nextExercise() {
+  currentExercise++;
+  const w = state.plan.workouts[currentWorkout];
+
+  if (currentExercise >= w.exercises.length) {
+    currentWorkout++;
+    currentExercise = 0;
+  }
+
+  if (currentWorkout >= state.plan.workouts.length) {
+    renderDashboard();
+    return;
+  }
+
+  renderWorkout();
+}
+
+function init() {
+  if (!state.user) return renderAuth();
+  if (!state.plan) return renderDashboard();
+  renderPlan();
+}
+
+init();
+</script>
 </body>
 </html>

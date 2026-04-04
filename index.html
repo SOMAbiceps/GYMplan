@@ -1,878 +1,233 @@
-import { useState } from “react”;
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>FitPlan AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  margin: 0;
+  font-family: system-ui;
+  background: #0d0d0d;
+  color: #f0f0f0;
+}
+.wrap {
+  max-width: 600px;
+  margin: auto;
+  padding: 30px 16px 80px;
+}
+.card {
+  background: #161616;
+  border: 1.5px solid #2a2a2a;
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+}
+.card.active {
+  border-color: #c8f045;
+  background: rgba(200,240,69,0.07);
+}
+.btn {
+  padding: 12px 22px;
+  border-radius: 99px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+}
+.primary { background: #c8f045; color: #000; }
+.secondary { background: transparent; color: #666; border: 1px solid #2a2a2a; }
+
+.progress {
+  height: 3px;
+  background: #1e1e1e;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.progress-bar {
+  height: 100%;
+  background: #c8f045;
+  width: 0%;
+  transition: 0.3s;
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<h1>FitPlan AI</h1>
+
+<div class="progress">
+  <div class="progress-bar" id="bar"></div>
+</div>
+
+<div id="app"></div>
+
+</div>
+
+<script>
+const state = {
+  step: 1,
+  answers: {},
+  plan: null,
+  loading: false
+};
 
 const GOALS = {
-kobieta: [
-{ value: “posladki”, icon: “🍑”, label: “Pośladki & uda” },
-{ value: “brzuch”, icon: “⚡”, label: “Brzuch & talia” },
-{ value: “cale_cialo”, icon: “✨”, label: “Całe ciało” },
-{ value: “ramiona”, icon: “💪”, label: “Ramiona & plecy” },
-{ value: “redukcja”, icon: “🔥”, label: “Redukcja” },
-{ value: “kondycja”, icon: “🏃”, label: “Kondycja” },
-],
-mezczyzna: [
-{ value: “klatka”, icon: “🦁”, label: “Klatka & triceps” },
-{ value: “plecy”, icon: “💪”, label: “Plecy & biceps” },
-{ value: “nogi”, icon: “🦵”, label: “Nogi & pośladki” },
-{ value: “barki”, icon: “🔱”, label: “Barki & ramiona” },
-{ value: “masa”, icon: “⚡”, label: “Masa – całe ciało” },
-{ value: “rzezba”, icon: “🔥”, label: “Redukcja & rzeźba” },
-],
+  kobieta: [
+    { value: "posladki", label: "🍑 Pośladki" },
+    { value: "brzuch", label: "⚡ Brzuch" }
+  ],
+  mezczyzna: [
+    { value: "klatka", label: "🦁 Klatka" },
+    { value: "plecy", label: "💪 Plecy" }
+  ]
 };
 
-// ─── BAZA PLANÓW ───────────────────────────────────────────────
 const PLANS = {
-// KOBIETA
-kobieta_posladki: {
-opis: “Plan skupiony na rozbudowie pośladków i ud. Hip thrust i przysiad to fundament — bez nich nie ma efektów.”,
-harmonogram: {
-“2 dni”: [
-{ dzien: “Wtorek”, partia: “Pośladki + uda”, czas: “55 min” },
-{ dzien: “Piątek”, partia: “Pośladki + uda”, czas: “55 min” },
-],
-“3 dni”: [
-{ dzien: “Poniedziałek”, partia: “Pośladki + tylne udo”, czas: “50 min” },
-{ dzien: “Środa”, partia: “Pośladki + przednie udo”, czas: “50 min” },
-{ dzien: “Piątek”, partia: “Pośladki – mix”, czas: “50 min” },
-],
-“4+ dni”: [
-{ dzien: “Poniedziałek”, partia: “Pośladki + tylne udo”, czas: “50 min” },
-{ dzien: “Wtorek”, partia: “Pośladki + przednie udo”, czas: “50 min” },
-{ dzien: “Czwartek”, partia: “Pośladki – siła”, czas: “55 min” },
-{ dzien: “Sobota”, partia: “Pośladki – objętość”, czas: “50 min” },
-],
-},
-treningi: [
-{
-nazwa: “Trening A – Pośladki + tylne udo”,
-cwiczenia: [
-{ cwiczenie: “Hip Thrust ze sztangą”, serie: “4”, powt: “10–12”, uwagi: “Główne ćwiczenie — nie pomijaj” },
-{ cwiczenie: “Martwy ciąg rumuński”, serie: “4”, powt: “10–12”, uwagi: “Kontroluj opuszczanie” },
-{ cwiczenie: “Wykroki w miejscu”, serie: “3”, powt: “10 na nogę”, uwagi: “Utrzymuj kolano nad stopą” },
-{ cwiczenie: “Odwodzenie nóg w maszynie”, serie: “3”, powt: “15”, uwagi: “Powolne tempo” },
-{ cwiczenie: “Glute kickback z gumą”, serie: “3”, powt: “12 na nogę”, uwagi: “Ściskaj pośladek na górze” },
-],
-},
-{
-nazwa: “Trening B – Pośladki + przednie udo”,
-cwiczenia: [
-{ cwiczenie: “Przysiad sumo z hantlem”, serie: “4”, powt: “12–15”, uwagi: “Szeroki rozstaw stóp” },
-{ cwiczenie: “Leg Press (szerokie ustawienie)”, serie: “4”, powt: “12–15”, uwagi: “Stopy wysoko na platformie” },
-{ cwiczenie: “Mostek biodrowy jednonóż”, serie: “3”, powt: “12 na nogę”, uwagi: “Wolne i kontrolowane” },
-{ cwiczenie: “Przysiady bułgarskie”, serie: “3”, powt: “10 na nogę”, uwagi: “Tylna noga na ławce” },
-{ cwiczenie: “Odwodzenie nóg leżąc z gumą”, serie: “3”, powt: “15”, uwagi: “Napięte pośladki przez cały czas” },
-],
-},
-],
-wskazowki: [
-“Zacznij od lekkiego ciężaru – ważna jest technika, nie obciążenie”,
-“Hip thrust: plecy na ławce, biodra unoszą się prosto w górę”,
-“Każdy trening zaczynaj od 5 min rozgrzewki na rowerku”,
-“Efekty widać po 8–12 tygodniach regularnych treningów”,
-],
-progresja: “Co 1–2 tygodnie zwiększaj ciężar o 2,5 kg w głównych ćwiczeniach. Jeśli nie możesz utrzymać techniki – nie zwiększaj. Dodawaj też serie: zacznij od 3, przejdź do 4 po 3–4 tygodniach.”,
-},
-
-kobieta_brzuch: {
-opis: “Plan na płaski brzuch i smukłą talię. Łączy ćwiczenia core z cardio, które faktycznie redukuje tłuszcz.”,
-harmonogram: {
-“2 dni”: [
-{ dzien: “Wtorek”, partia: “Core + cardio”, czas: “45 min” },
-{ dzien: “Piątek”, partia: “Core + cardio”, czas: “45 min” },
-],
-“3 dni”: [
-{ dzien: “Poniedziałek”, partia: “Core – siła”, czas: “45 min” },
-{ dzien: “Środa”, partia: “Cardio + core”, czas: “40 min” },
-{ dzien: “Piątek”, partia: “Core – wytrzymałość”, czas: “45 min” },
-],
-“4+ dni”: [
-{ dzien: “Poniedziałek”, partia: “Core – siła”, czas: “45 min” },
-{ dzien: “Wtorek”, partia: “Cardio 30 min”, czas: “30 min” },
-{ dzien: “Czwartek”, partia: “Core – wytrzymałość”, czas: “45 min” },
-{ dzien: “Sobota”, partia: “Full body + core”, czas: “50 min” },
-],
-},
-treningi: [
-{
-nazwa: “Trening A – Core siła”,
-cwiczenia: [
-{ cwiczenie: “Plank”, serie: “4”, powt: “45 sek”, uwagi: “Biodra nie opadają” },
-{ cwiczenie: “Hollow body hold”, serie: “3”, powt: “30 sek”, uwagi: “Dolny kręgosłup przy macie” },
-{ cwiczenie: “Martwy robak (dead bug)”, serie: “3”, powt: “10 na stronę”, uwagi: “Wolne, kontrolowane” },
-{ cwiczenie: “Russian twist z hantlem”, serie: “3”, powt: “15 na stronę”, uwagi: “Stopy uniesione” },
-{ cwiczenie: “Rollout na kole ab wheel”, serie: “3”, powt: “8–10”, uwagi: “Kolana na macie na start” },
-],
-},
-{
-nazwa: “Trening B – Core wytrzymałość”,
-cwiczenia: [
-{ cwiczenie: “Mountain climbers”, serie: “4”, powt: “30 sek”, uwagi: “Szybkie tempo” },
-{ cwiczenie: “Leg raises leżąc”, serie: “3”, powt: “15”, uwagi: “Nogi proste, nie opuszczaj do końca” },
-{ cwiczenie: “Side plank”, serie: “3”, powt: “30 sek na stronę”, uwagi: “Biodra w linii” },
-{ cwiczenie: “Bicycle crunch”, serie: “3”, powt: “20”, uwagi: “Kontrolowane rotacje” },
-{ cwiczenie: “Deska z unoszeniem nogi”, serie: “3”, powt: “10 na nogę”, uwagi: “Biodra stabilne” },
-],
-},
-],
-wskazowki: [
-“Płaski brzuch to 80% dieta – bez deficytu kalorycznego ćwiczenia nie pokażą efektów”,
-“Cardio 3x w tygodniu po 20–30 min przyspiesza redukcję”,
-“Nie rób setek brzuszków – lepiej 3 serie planka niż 100 crunchów”,
-“Nawadniaj się dobrze – wzdęcia często maskują efekty”,
-],
-progresja: “Wydłużaj czas planku o 5 sekund co tydzień. Zwiększaj ciężar w Russian twist co 2 tygodnie. Po 4 tygodniach dodaj 1 rundę do każdego treningu.”,
-},
-
-kobieta_cale_cialo: {
-opis: “Plan ujędrniający całą sylwetkę. Idealne połączenie ćwiczeń wielostawowych z izolacją.”,
-harmonogram: {
-“2 dni”: [
-{ dzien: “Wtorek”, partia: “Całe ciało A”, czas: “55 min” },
-{ dzien: “Piątek”, partia: “Całe ciało B”, czas: “55 min” },
-],
-“3 dni”: [
-{ dzien: “Poniedziałek”, partia: “Całe ciało A”, czas: “55 min” },
-{ dzien: “Środa”, partia: “Całe ciało B”, czas: “55 min” },
-{ dzien: “Piątek”, partia: “Całe ciało C”, czas: “50 min” },
-],
-“4+ dni”: [
-{ dzien: “Poniedziałek”, partia: “Górna A + core”, czas: “50 min” },
-{ dzien: “Wtorek”, partia: “Dolna A”, czas: “55 min” },
-{ dzien: “Czwartek”, partia: “Górna B + core”, czas: “50 min” },
-{ dzien: “Sobota”, partia: “Dolna B”, czas: “55 min” },
-],
-},
-treningi: [
-{
-nazwa: “Trening A – Całe ciało”,
-cwiczenia: [
-{ cwiczenie: “Goblet squat z hantlem”, serie: “4”, powt: “12”, uwagi: “Plecy proste, kolana na zewnątrz” },
-{ cwiczenie: “Wiosłowanie hantlem w opadzie”, serie: “3”, powt: “12 na rękę”, uwagi: “Łokieć blisko ciała” },
-{ cwiczenie: “Hip thrust ze sztangą”, serie: “4”, powt: “12”, uwagi: “Ściskaj pośladki na górze” },
-{ cwiczenie: “Wyciskanie hantli nad głowę”, serie: “3”, powt: “12”, uwagi: “Nie przeprostowuj łokci” },
-{ cwiczenie: “Plank”, serie: “3”, powt: “40 sek”, uwagi: “” },
-],
-},
-{
-nazwa: “Trening B – Całe ciało”,
-cwiczenia: [
-{ cwiczenie: “Martwy ciąg rumuński”, serie: “4”, powt: “10”, uwagi: “Kontrolowane opuszczanie” },
-{ cwiczenie: “Pompki (z kolan lub pełne)”, serie: “3”, powt: “10–12”, uwagi: “Ciało w linii prostej” },
-{ cwiczenie: “Wykroki z hantlami”, serie: “3”, powt: “10 na nogę”, uwagi: “” },
-{ cwiczenie: “Podciąganie na drążku z gumą”, serie: “3”, powt: “8–10”, uwagi: “Lub ściąganie drążka w maszynie” },
-{ cwiczenie: “Russian twist”, serie: “3”, powt: “15 na stronę”, uwagi: “” },
-],
-},
-],
-wskazowki: [
-“Przerwa między seriami: 60–90 sekund”,
-“Skup się na czuciu mięśnia, nie na ciężarze”,
-“Rozgrzewka 5–10 min przed treningiem obowiązkowo”,
-“Sen i regeneracja są równie ważne jak trening”,
-],
-progresja: “Co 2 tygodnie dodaj 2,5 kg do ćwiczeń z ciężarami. Jeśli 12 powtórzeń jest za łatwe – zwiększ ciężar. Celem jest, żeby ostatnie 2 powtórzenia były wymagające.”,
-},
-
-kobieta_ramiona: {
-opis: “Plan na zgrabne, umięśnione ramiona i mocne plecy. Kluczowe dla pięknej sylwetki i dobrej postawy.”,
-harmonogram: {
-“2 dni”: [
-{ dzien: “Wtorek”, partia: “Plecy + biceps”, czas: “50 min” },
-{ dzien: “Piątek”, partia: “Barki + triceps”, czas: “50 min” },
-],
-“3 dni”: [
-{ dzien: “Poniedziałek”, partia: “Plecy + biceps”, czas: “50 min” },
-{ dzien: “Środa”, partia: “Barki + triceps”, czas: “50 min” },
-{ dzien: “Piątek”, partia: “Ramiona – mix”, czas: “50 min” },
-],
-“4+ dni”: [
-{ dzien: “Poniedziałek”, partia: “Plecy + biceps”, czas: “50 min” },
-{ dzien: “Wtorek”, partia: “Barki + triceps”, czas: “50 min” },
-{ dzien: “Czwartek”, partia: “Klatka + plecy”, czas: “50 min” },
-{ dzien: “Sobota”, partia: “Ramiona – izolacja”, czas: “45 min” },
-],
-},
-treningi: [
-{
-nazwa: “Trening A – Plecy + biceps”,
-cwiczenia: [
-{ cwiczenie: “Ściąganie drążka do klatki (maszyna)”, serie: “4”, powt: “12”, uwagi: “Łopatki razem na dole” },
-{ cwiczenie: “Wiosłowanie siedząc na maszynie”, serie: “4”, powt: “12”, uwagi: “Kontroluj ruch powrotny” },
-{ cwiczenie: “Wiosłowanie hantlem jednoręcz”, serie: “3”, powt: “12 na rękę”, uwagi: “” },
-{ cwiczenie: “Uginanie bicepsów z hantlami”, serie: “3”, powt: “12”, uwagi: “Łokcie przy ciele” },
-{ cwiczenie: “Młotki (hammer curl)”, serie: “3”, powt: “12”, uwagi: “” },
-],
-},
-{
-nazwa: “Trening B – Barki + triceps”,
-cwiczenia: [
-{ cwiczenie: “Wyciskanie hantli nad głowę”, serie: “4”, powt: “12”, uwagi: “Siedząc lub stojąc” },
-{ cwiczenie: “Unoszenie bokiem hantli”, serie: “3”, powt: “15”, uwagi: “Lekki ciężar, dobre czucie” },
-{ cwiczenie: “Prostowanie ramion na lince (triceps)”, serie: “3”, powt: “15”, uwagi: “Łokcie przy ciele” },
-{ cwiczenie: “French press z hantlem”, serie: “3”, powt: “12”, uwagi: “Leżąc na ławce” },
-{ cwiczenie: “Odwrotne rozpiętki (maszyna)”, serie: “3”, powt: “15”, uwagi: “Tylna głowa barku” },
-],
-},
-],
-wskazowki: [
-“Ramiona rosną głównie przy ciężarze wielostawowym (wiosłowanie, wyciskanie)”,
-“Izolacja (curle, triceps) to dodatek, nie fundament”,
-“Nie bój się ciężaru – kobiety nie urosną jak mężczyźni”,
-“Plecy to największa grupa mięśniowa górnej części ciała – ćwicz je priorytetowo”,
-],
-progresja: “Zwiększaj ciężar w wiosłowaniu i wyciskaniu co 1–2 tygodnie. W ćwiczeniach izolacyjnych co 2–3 tygodnie. Dodaj serię po 4 tygodniach.”,
-},
-
-kobieta_redukcja: {
-opis: “Plan łączący trening siłowy z cardio dla maksymalnej redukcji tłuszczu przy zachowaniu mięśni.”,
-harmonogram: {
-“2 dni”: [
-{ dzien: “Wtorek”, partia: “Full body + HIIT”, czas: “60 min” },
-{ dzien: “Piątek”, partia: “Full body + HIIT”, czas: “60 min” },
-],
-“3 dni”: [
-{ dzien: “Poniedziałek”, partia: “Siła – górna”, czas: “50 min” },
-{ dzien: “Środa”, partia: “Siła – dolna”, czas: “50 min” },
-{ dzien: “Piątek”, partia: “HIIT + core”, czas: “40 min” },
-],
-“4+ dni”: [
-{ dzien: “Poniedziałek”, partia: “Siła – górna”, czas: “50 min” },
-{ dzien: “Wtorek”, partia: “Cardio 30 min”, czas: “30 min” },
-{ dzien: “Czwartek”, partia: “Siła – dolna”, czas: “55 min” },
-{ dzien: “Sobota”, partia: “HIIT + core”, czas: “40 min” },
-],
-},
-treningi: [
-{
-nazwa: “Trening A – Siła (Full body)”,
-cwiczenia: [
-{ cwiczenie: “Przysiad z hantlami”, serie: “4”, powt: “12”, uwagi: “” },
-{ cwiczenie: “Wiosłowanie hantlem”, serie: “3”, powt: “12 na rękę”, uwagi: “” },
-{ cwiczenie: “Hip thrust z gumą”, serie: “3”, powt: “15”, uwagi: “” },
-{ cwiczenie: “Wyciskanie hantli”, serie: “3”, powt: “12”, uwagi: “” },
-{ cwiczenie: “Plank”, serie: “3”, powt: “40 sek”, uwagi: “” },
-],
-},
-{
-nazwa: “Trening B – HIIT (obwód 4 rundy)”,
-cwiczenia: [
-{ cwiczenie: “Jumping jacks”, serie: “4”, powt: “30 sek”, uwagi: “Przerwa 15 sek między ćwicz.” },
-{ cwiczenie: “Burpees”, serie: “4”, powt: “30 sek”, uwagi: “” },
-{ cwiczenie: “Squat jump”, serie: “4”, powt: “30 sek”, uwagi: “” },
-{ cwiczenie: “Mountain climbers”, serie: “4”, powt: “30 sek”, uwagi: “” },
-{ cwiczenie: “High knees”, serie: “4”, powt: “30 sek”, uwagi: “Przerwa 60 sek po rundzie” },
-],
-},
-],
-wskazowki: [
-“Deficyt kaloryczny to klucz – bez niego żaden plan nie zredukuje tłuszczu”,
-“Siła zachowuje mięśnie podczas redukcji – nie rezygnuj z niej”,
-“Cardio na czczo nie daje magicznych efektów – mit”,
-“Spij 7–8 godzin – kortyzol niszczy wyniki”,
-],
-progresja: “W 1–2 tygodniu skupiaj się na technice. Od 3 tygodnia zwiększaj ciężary i intensywność HIIT. Po 4 tygodniach dodaj 5 min do sesji cardio.”,
-},
-
-kobieta_kondycja: {
-opis: “Plan dla poprawy kondycji, wytrzymałości i ogólnej sprawności. Idealny na start.”,
-harmonogram: {
-“2 dni”: [
-{ dzien: “Wtorek”, partia: “Cardio + siła”, czas: “50 min” },
-{ dzien: “Piątek”, partia: “Cardio + siła”, czas: “50 min” },
-],
-“3 dni”: [
-{ dzien: “Poniedziałek”, partia: “Bieg/rower + siła górna”, czas: “50 min” },
-{ dzien: “Środa”, partia: “HIIT + core”, czas: “40 min” },
-{ dzien: “Piątek”, partia: “Bieg/rower + siła dolna”, czas: “50 min” },
-],
-“4+ dni”: [
-{ dzien: “Poniedziałek”, partia: “Siła górna”, czas: “45 min” },
-{ dzien: “Wtorek”, partia: “Cardio 30 min”, czas: “30 min” },
-{ dzien: “Czwartek”, partia: “Siła dolna”, czas: “50 min” },
-{ dzien: “Sobota”, partia: “HIIT + stretching”, czas: “45 min” },
-],
-},
-treningi: [
-{
-nazwa: “Trening A – Siła + kondycja”,
-cwiczenia: [
-{ cwiczenie: “Bieg na bieżni lub rower”, serie: “1”, powt: “15 min”, uwagi: “Umiarkowane tempo” },
-{ cwiczenie: “Przysiad z własnym ciężarem”, serie: “3”, powt: “15”, uwagi: “” },
-{ cwiczenie: “Pompki z kolan”, serie: “3”, powt: “10”, uwagi: “” },
-{ cwiczenie: “Mostek biodrowy”, serie: “3”, powt: “15”, uwagi: “” },
-{ cwiczenie: “Plank”, serie: “3”, powt: “30 sek”, uwagi: “” },
-],
-},
-{
-nazwa: “Trening B – HIIT”,
-cwiczenia: [
-{ cwiczenie: “Jumping jacks”, serie: “3”, powt: “40 sek”, uwagi: “Przerwa 20 sek” },
-{ cwiczenie: “Squat”, serie: “3”, powt: “40 sek”, uwagi: “” },
-{ cwiczenie: “Mountain climbers”, serie: “3”, powt: “40 sek”, uwagi: “” },
-{ cwiczenie: “Lunges w miejscu”, serie: “3”, powt: “40 sek”, uwagi: “” },
-{ cwiczenie: “High knees”, serie: “3”, powt: “40 sek”, uwagi: “Przerwa 90 sek po rundzie” },
-],
-},
-],
-wskazowki: [
-“Zacznij od 2 treningów w tygodniu, dodaj 3. po 2 tygodniach”,
-“Nie musisz biec – szybki marsz to też cardio”,
-“Słuchaj ciała – ból mięśni to norma, ból stawów to sygnał stop”,
-“Postęp mierz kondycją, nie wyglądem – najpierw poczujesz różnicę”,
-],
-progresja: “Co tydzień wydłużaj cardio o 2–3 minuty. Co 2 tygodnie dodaj serię do ćwiczeń siłowych. Po miesiącu zacznij używać lekkich hantli.”,
-},
-
-// MĘŻCZYZNA
-mezczyzna_klatka: {
-opis: “Plan na rozbudowę klatki piersiowej i tricepsów. Wyciskanie w różnych wariantach to fundament.”,
-harmonogram: {
-“2 dni”: [
-{ dzien: “Wtorek”, partia: “Klatka + triceps A”, czas: “55 min” },
-{ dzien: “Piątek”, partia: “Klatka + triceps B”, czas: “55 min” },
-],
-“3 dni”: [
-{ dzien: “Poniedziałek”, partia: “Klatka – siła”, czas: “60 min” },
-{ dzien: “Środa”, partia: “Triceps + barki”, czas: “55 min” },
-{ dzien: “Piątek”, partia: “Klatka – objętość”, czas: “55 min” },
-],
-“4+ dni”: [
-{ dzien: “Poniedziałek”, partia: “Klatka – siła”, czas: “60 min” },
-{ dzien: “Wtorek”, partia: “Triceps + barki”, czas: “55 min” },
-{ dzien: “Czwartek”, partia: “Klatka – objętość”, czas: “55 min” },
-{ dzien: “Sobota”, partia: “Klatka dolna + triceps”, czas: “55 min” },
-],
-},
-treningi: [
-{
-nazwa: “Trening A – Klatka siła”,
-cwiczenia: [
-{ cwiczenie: “Wyciskanie sztangi na ławce płaskiej”, serie: “5”, powt: “5”, uwagi: “Główne ćwiczenie siłowe” },
-{ cwiczenie: “Wyciskanie hantli na ławce skośnej”, serie: “4”, powt: “10”, uwagi: “Górna część klatki” },
-{ cwiczenie: “Rozpiętki hantlami”, serie: “3”, powt: “12”, uwagi: “Pełny zakres ruchu” },
-{ cwiczenie: “Pompki”, serie: “3”, powt: “do upadku”, uwagi: “” },
-{ cwiczenie: “Prostowanie ramion na lince”, serie: “3”, powt: “12”, uwagi: “Triceps” },
-],
-},
-{
-nazwa: “Trening B – Klatka objętość”,
-cwiczenia: [
-{ cwiczenie: “Wyciskanie hantli na ławce płaskiej”, serie: “4”, powt: “12”, uwagi: “” },
-{ cwiczenie: “Rozpiętki na maszynie (pec deck)”, serie: “4”, powt: “15”, uwagi: “Ściskaj klatkę na końcu” },
-{ cwiczenie: “Dipy na poręczach”, serie: “3”, powt: “10–12”, uwagi: “Lekkie pochylenie do przodu” },
-{ cwiczenie: “French press ze sztangą”, serie: “3”, powt: “12”, uwagi: “Triceps” },
-{ cwiczenie: “Pompki diamentowe”, serie: “3”, powt: “10”, uwagi: “” },
-],
-},
-],
-wskazowki: [
-“Wyciskanie sztangi na ławce: łopatki ściągnięte przez cały czas”,
-“Nie zginaj nadgarstków – ciężar trzymaj nad nasadą dłoni”,
-“Przerwa między seriami siłowymi: 2–3 minuty”,
-“Triceps pracuje też przy wyciskaniu – nie przetrenuj go oddzielnie”,
-],
-progresja: “Zwiększaj wyciskanie o 2,5 kg co tydzień (metoda progressive overload). Gdy utkniesz – zrób 1 tydzień z lżejszym ciężarem (deload), potem wróć.”,
-},
-
-mezczyzna_plecy: {
-opis: “Plan na szerokie, umięśnione plecy i bicepsy. Podciąganie i wiosłowanie to absolutna baza.”,
-harmonogram: {
-“2 dni”: [
-{ dzien: “Wtorek”, partia: “Plecy + biceps A”, czas: “55 min” },
-{ dzien: “Piątek”, partia: “Plecy + biceps B”, czas: “55 min” },
-],
-“3 dni”: [
-{ dzien: “Poniedziałek”, partia: “Plecy szerokość”, czas: “55 min” },
-{ dzien: “Środa”, partia: “Plecy grubość + biceps”, czas: “55 min” },
-{ dzien: “Piątek”, partia: “Plecy + biceps mix”, czas: “55 min” },
-],
-“4+ dni”: [
-{ dzien: “Poniedziałek”, partia: “Plecy szerokość”, czas: “55 min” },
-{ dzien: “Wtorek”, partia: “Biceps + przedramię”, czas: “45 min” },
-{ dzien: “Czwartek”, partia: “Plecy grubość”, czas: “55 min” },
-{ dzien: “Sobota”, partia: “Plecy – całość”, czas: “60 min” },
-],
-},
-treningi: [
-{
-nazwa: “Trening A – Plecy szerokość”,
-cwiczenia: [
-{ cwiczenie: “Podciąganie na drążku nachwytem”, serie: “4”, powt: “6–8”, uwagi: “Jeśli za trudne – z gumą” },
-{ cwiczenie: “Ściąganie drążka szerokim chwytem”, serie: “4”, powt: “10–12”, uwagi: “Łopatki na dół i razem” },
-{ cwiczenie: “Podciąganie podchwytem”, serie: “3”, powt: “8–10”, uwagi: “Bardziej angażuje biceps” },
-{ cwiczenie: “Uginanie bicepsów ze sztangą”, serie: “4”, powt: “10”, uwagi: “” },
-{ cwiczenie: “Młotki (hammer curl)”, serie: “3”, powt: “12”, uwagi: “” },
-],
-},
-{
-nazwa: “Trening B – Plecy grubość”,
-cwiczenia: [
-{ cwiczenie: “Wiosłowanie sztangą w opadzie”, serie: “4”, powt: “8–10”, uwagi: “Plecy równolegle do podłogi” },
-{ cwiczenie: “Wiosłowanie hantlem jednoręcz”, serie: “4”, powt: “10 na rękę”, uwagi: “Łokieć wysoko” },
-{ cwiczenie: “Wiosłowanie na maszynie siedząc”, serie: “3”, powt: “12”, uwagi: “” },
-{ cwiczenie: “Face pull na lince”, serie: “3”, powt: “15”, uwagi: “Tylna głowa barku” },
-{ cwiczenie: “Uginanie bicepsów z hantlami”, serie: “3”, powt: “12”, uwagi: “” },
-],
-},
-],
-wskazowki: [
-“Przy wiosłowaniu: nie szarp – ciągnij łokciem, nie dłonią”,
-“Podciąganie to najlepsze ćwiczenie na plecy – trenuj je zawsze”,
-“Czuj każde powtórzenie – plecy to mięsień, który łatwo zrekompensować ramionami”,
-“Przerwa między seriami: 90 sek–2 min”,
-],
-progresja: “Zwiększaj ciężar w wiosłowaniu o 2,5–5 kg co 1–2 tygodnie. W podciąganiu – dodaj obciążenie na pasie gdy robisz 10+ powtórzeń bez problemu.”,
-},
-
-mezczyzna_nogi: {
-opis: “Plan na masywne nogi i pośladki. Przysiad ze sztangą to król ćwiczeń – nie pomijaj dnia nóg.”,
-harmonogram: {
-“2 dni”: [
-{ dzien: “Wtorek”, partia: “Nogi A”, czas: “60 min” },
-{ dzien: “Piątek”, partia: “Nogi B”, czas: “60 min” },
-],
-“3 dni”: [
-{ dzien: “Poniedziałek”, partia: “Nogi – siła”, czas: “65 min” },
-{ dzien: “Środa”, partia: “Nogi – przednie udo”, czas: “55 min” },
-{ dzien: “Piątek”, partia: “Nogi – tylne udo”, czas: “55 min” },
-],
-“4+ dni”: [
-{ dzien: “Poniedziałek”, partia: “Nogi – siła (przysiad)”, czas: “65 min” },
-{ dzien: “Wtorek”, partia: “Łydki + core”, czas: “40 min” },
-{ dzien: “Czwartek”, partia: “Nogi – objętość”, czas: “60 min” },
-{ dzien: “Sobota”, partia: “Nogi – tylne + pośladki”, czas: “55 min” },
-],
-},
-treningi: [
-{
-nazwa: “Trening A – Nogi siła”,
-cwiczenia: [
-{ cwiczenie: “Przysiad ze sztangą z tyłu”, serie: “5”, powt: “5”, uwagi: “Król ćwiczeń – technika > ciężar” },
-{ cwiczenie: “Leg Press”, serie: “4”, powt: “10–12”, uwagi: “Stopy na szerokość barków” },
-{ cwiczenie: “Wyprost nóg na maszynie”, serie: “3”, powt: “15”, uwagi: “Izolacja czworogłowego” },
-{ cwiczenie: “Martwy ciąg rumuński”, serie: “4”, powt: “10”, uwagi: “Tylne udo i pośladki” },
-{ cwiczenie: “Wspięcia na palce (łydki)”, serie: “4”, powt: “15”, uwagi: “” },
-],
-},
-{
-nazwa: “Trening B – Nogi objętość”,
-cwiczenia: [
-{ cwiczenie: “Hack squat na maszynie”, serie: “4”, powt: “12”, uwagi: “” },
-{ cwiczenie: “Bułgarski przysiad (split squat)”, serie: “3”, powt: “10 na nogę”, uwagi: “Tylna noga na ławce” },
-{ cwiczenie: “Curl nóg leżąc (maszyna)”, serie: “4”, powt: “12”, uwagi: “Tylne udo” },
-{ cwiczenie: “Hip thrust ze sztangą”, serie: “3”, powt: “12”, uwagi: “Pośladki” },
-{ cwiczenie: “Wspięcia na palce jednonóż”, serie: “3”, powt: “15 na nogę”, uwagi: “” },
-],
-},
-],
-wskazowki: [
-“Przysiad: kolana podążają za stopami, plecy proste, pięty na podłodze”,
-“Głęboki przysiad (poniżej równoległości) lepiej angażuje pośladki”,
-“Nie pomijaj łydek – to podstawa proporcji nóg”,
-“Przerwy między seriami przysiadu: 3–4 minuty”,
-],
-progresja: “W przysiadu zwiększaj o 2,5 kg co tydzień. W leg pressie i maszynach – co 1–2 tygodnie. Po 6 tygodniach możesz dodać front squat jako wariant.”,
-},
-
-mezczyzna_barki: {
-opis: “Plan na szerokie barki i masywne ramiona. OHP (wyciskanie nad głowę) to podstawa.”,
-harmonogram: {
-“2 dni”: [
-{ dzien: “Wtorek”, partia: “Barki + biceps”, czas: “55 min” },
-{ dzien: “Piątek”, partia: “Barki + triceps”, czas: “55 min” },
-],
-“3 dni”: [
-{ dzien: “Poniedziałek”, partia: “Barki – siła”, czas: “55 min” },
-{ dzien: “Środa”, partia: “Biceps + triceps”, czas: “50 min” },
-{ dzien: “Piątek”, partia: “Barki – objętość”, czas: “55 min” },
-],
-“4+ dni”: [
-{ dzien: “Poniedziałek”, partia: “Barki – siła (OHP)”, czas: “55 min” },
-{ dzien: “Wtorek”, partia: “Biceps”, czas: “40 min” },
-{ dzien: “Czwartek”, partia: “Barki – boczna głowa”, czas: “50 min” },
-{ dzien: “Sobota”, partia: “Triceps + tylna głowa barku”, czas: “50 min” },
-],
-},
-treningi: [
-{
-nazwa: “Trening A – Barki siła”,
-cwiczenia: [
-{ cwiczenie: “Wyciskanie sztangi stojąc (OHP)”, serie: “5”, powt: “5”, uwagi: “Rdzeń napięty, nie wygina kręgosłupa” },
-{ cwiczenie: “Wyciskanie hantli siedząc”, serie: “4”, powt: “10”, uwagi: “” },
-{ cwiczenie: “Unoszenie hantli bokiem”, serie: “4”, powt: “15”, uwagi: “Lekki ciężar – tu czucie jest ważne” },
-{ cwiczenie: “Uginanie bicepsów ze sztangą”, serie: “4”, powt: “10”, uwagi: “” },
-{ cwiczenie: “Modliszka (preacher curl)”, serie: “3”, powt: “12”, uwagi: “” },
-],
-},
-{
-nazwa: “Trening B – Barki objętość”,
-cwiczenia: [
-{ cwiczenie: “Odwrotne rozpiętki w opadzie”, serie: “4”, powt: “15”, uwagi: “Tylna głowa barku” },
-{ cwiczenie: “Unoszenie hantli przed siebie”, serie: “3”, powt: “12”, uwagi: “Przednia głowa” },
-{ cwiczenie: “Face pull na lince”, serie: “4”, powt: “15”, uwagi: “Tylna głowa + rotatory” },
-{ cwiczenie: “Prostowanie ramion na lince”, serie: “4”, powt: “12”, uwagi: “Triceps” },
-{ cwiczenie: “Dipy wąskim chwytem”, serie: “3”, powt: “10–12”, uwagi: “” },
-],
-},
-],
-wskazowki: [
-“OHP to najtrudniejsze ćwiczenie górnej partii – nie pomijaj go”,
-“Unoszenia bokiem: nie używaj rozmachu, lekki ciężar z pełną kontrolą”,
-“Tylna głowa barku jest zaniedbywana – face pull jest obowiązkowy”,
-“Barki angażują się przy wyciskaniu klatki – nie przetrenuj ich”,
-],
-progresja: “OHP zwiększaj o 2,5 kg co tydzień. Unoszenia bokiem – co 2–3 tygodnie. Po 6 tygodniach możesz dodać Arnold press.”,
-},
-
-mezczyzna_masa: {
-opis: “Plan na maksymalną masę mięśniową całego ciała. Opiera się na 4 ćwiczeniach bazowych: przysiad, wyciskanie, martwy ciąg, OHP.”,
-harmonogram: {
-“2 dni”: [
-{ dzien: “Wtorek”, partia: “Całe ciało A”, czas: “70 min” },
-{ dzien: “Piątek”, partia: “Całe ciało B”, czas: “70 min” },
-],
-“3 dni”: [
-{ dzien: “Poniedziałek”, partia: “Siła (przysiad + OHP)”, czas: “65 min” },
-{ dzien: “Środa”, partia: “Siła (martwy + wiosłowanie)”, czas: “65 min” },
-{ dzien: “Piątek”, partia: “Objętość (całe ciało)”, czas: “65 min” },
-],
-“4+ dni”: [
-{ dzien: “Poniedziałek”, partia: “Klatka + triceps”, czas: “60 min” },
-{ dzien: “Wtorek”, partia: “Plecy + biceps”, czas: “60 min” },
-{ dzien: “Czwartek”, partia: “Nogi”, czas: “65 min” },
-{ dzien: “Sobota”, partia: “Barki + ramiona”, czas: “55 min” },
-],
-},
-treningi: [
-{
-nazwa: “Trening A – Siła bazowa”,
-cwiczenia: [
-{ cwiczenie: “Przysiad ze sztangą”, serie: “5”, powt: “5”, uwagi: “Priorytet nr 1” },
-{ cwiczenie: “Wyciskanie sztangi na ławce”, serie: “5”, powt: “5”, uwagi: “” },
-{ cwiczenie: “Wiosłowanie sztangą”, serie: “5”, powt: “5”, uwagi: “” },
-{ cwiczenie: “Podciąganie na drążku”, serie: “3”, powt: “max”, uwagi: “” },
-{ cwiczenie: “Martwy ciąg”, serie: “1”, powt: “5”, uwagi: “1 ciężka seria” },
-],
-},
-{
-nazwa: “Trening B – Objętość”,
-cwiczenia: [
-{ cwiczenie: “Przysiad ze sztangą”, serie: “3”, powt: “10”, uwagi: “Lżej niż w dniu siłowym” },
-{ cwiczenie: “Wyciskanie hantli nad głowę”, serie: “4”, powt: “10”, uwagi: “” },
-{ cwiczenie: “Wiosłowanie hantlem”, serie: “4”, powt: “10 na rękę”, uwagi: “” },
-{ cwiczenie: “Uginanie bicepsów”, serie: “3”, powt: “12”, uwagi: “” },
-{ cwiczenie: “Prostowanie ramion”, serie: “3”, powt: “12”, uwagi: “” },
-],
-},
-],
-wskazowki: [
-“Na masę potrzebujesz nadwyżki kalorycznej – jedz więcej niż spalasz”,
-“Białko: minimum 1,6–2g na kg masy ciała dziennie”,
-“Sen 8 godzin – wtedy rosną mięśnie, nie na siłowni”,
-“Zwiększaj ciężar systematycznie – to jedyna droga do wzrostu”,
-],
-progresja: “Zwiększaj ciężar w każdym bazowym ćwiczeniu co tydzień o 2,5–5 kg. Gdy utkniesz – zrób tydzień deload (60% ciężaru), potem wróć silniejszy.”,
-},
-
-mezczyzna_rzezba: {
-opis: “Plan na redukcję tłuszczu przy zachowaniu masy mięśniowej. Siła + cardio = rzeźba.”,
-harmonogram: {
-“2 dni”: [
-{ dzien: “Wtorek”, partia: “Full body + cardio”, czas: “65 min” },
-{ dzien: “Piątek”, partia: “Full body + HIIT”, czas: “65 min” },
-],
-“3 dni”: [
-{ dzien: “Poniedziałek”, partia: “Górna + cardio”, czas: “60 min” },
-{ dzien: “Środa”, partia: “Dolna + HIIT”, czas: “60 min” },
-{ dzien: “Piątek”, partia: “Full body + cardio”, czas: “60 min” },
-],
-“4+ dni”: [
-{ dzien: “Poniedziałek”, partia: “Siła – górna”, czas: “55 min” },
-{ dzien: “Wtorek”, partia: “Cardio 35 min”, czas: “35 min” },
-{ dzien: “Czwartek”, partia: “Siła – dolna”, czas: “60 min” },
-{ dzien: “Sobota”, partia: “HIIT + core”, czas: “45 min” },
-],
-},
-treningi: [
-{
-nazwa: “Trening A – Siła (zachowanie masy)”,
-cwiczenia: [
-{ cwiczenie: “Przysiad ze sztangą”, serie: “4”, powt: “8”, uwagi: “Nie redukuj ciężaru podczas redukcji” },
-{ cwiczenie: “Wyciskanie sztangi na ławce”, serie: “4”, powt: “8”, uwagi: “” },
-{ cwiczenie: “Wiosłowanie sztangą”, serie: “4”, powt: “8”, uwagi: “” },
-{ cwiczenie: “Podciąganie na drążku”, serie: “3”, powt: “8”, uwagi: “” },
-{ cwiczenie: “OHP – wyciskanie stojąc”, serie: “3”, powt: “8”, uwagi: “” },
-],
-},
-{
-nazwa: “Trening B – HIIT (spalanie)”,
-cwiczenia: [
-{ cwiczenie: “Sprint na bieżni”, serie: “8”, powt: “30 sek sprint / 30 sek chód”, uwagi: “Interwały” },
-{ cwiczenie: “Kettlebell swing”, serie: “4”, powt: “20”, uwagi: “Lub przysiad jump” },
-{ cwiczenie: “Burpees”, serie: “4”, powt: “10”, uwagi: “” },
-{ cwiczenie: “Box jump”, serie: “3”, powt: “10”, uwagi: “Lub squat jump” },
-{ cwiczenie: “Mountain climbers”, serie: “3”, powt: “40 sek”, uwagi: “” },
-],
-},
-],
-wskazowki: [
-“Deficyt kalorii: 300–500 kcal poniżej zapotrzebowania – nie więcej”,
-“Białko minimum 2g/kg – to chroni mięśnie podczas redukcji”,
-“Nie zmniejszaj ciężarów siłowych – to sygnał dla mięśni żeby zostały”,
-“Cardio po sile – wtedy spalisz więcej tłuszczu”,
-],
-progresja: “Podczas redukcji priorytetem jest utrzymanie ciężarów, nie ich zwiększanie. Jeśli uda się zwiększyć – świetnie. Intensywność HIIT zwiększaj co 2 tygodnie.”,
-},
+  kobieta_posladki: {
+    opis: "Plan na pośladki 🔥",
+    trening: ["Hip thrust 4x12", "RDL 4x10", "Wykroki 3x10"]
+  },
+  mezczyzna_klatka: {
+    opis: "Plan na klatkę 💪",
+    trening: ["Bench press 5x5", "Incline DB 4x10", "Dipy 3x10"]
+  }
 };
 
-// ─── MAPOWANIE POZIOMÓW ─────────────────────────────────────────
-function getLevelNote(poziom, miejsce) {
-if (poziom === “poczatkujacy”) {
-return “⚡ Poziom: Początkujący — zacznij od lżejszych ciężarów niż myślisz. Opanuj technikę zanim zwiększysz obciążenie.”;
-}
-if (poziom === “zaawansowany”) {
-return “🔥 Poziom: Zaawansowany — stosuj periodyzację, dodawaj drop sety i supersets co 4–6 tygodni.”;
-}
-return “💪 Poziom: Średni — zwiększaj ciężar regularnie, skróć przerwy do 60–75 sek między seriami.”;
+function save() {
+  localStorage.setItem("fitplan", JSON.stringify(state.plan));
 }
 
-function getMiejsceNote(miejsce) {
-if (miejsce === “dom_gumy”) return “🏠 Trenujesz w domu z gumami/hantlami — zamień ćwiczenia maszynowe na ich odpowiedniki z gumami lub hantlami.”;
-if (miejsce === “dom_brak”) return “🧘 Trenujesz bez sprzętu — wszystkie ćwiczenia maszynowe zastąp wariantami z własnym ciężarem (pompki, przysiady, mostek).”;
-return null;
+function load() {
+  const saved = localStorage.getItem("fitplan");
+  if (saved) {
+    state.plan = JSON.parse(saved);
+    render();
+  }
 }
 
-export default function FitPlan() {
-const [step, setStep] = useState(1);
-const [answers, setAnswers] = useState({});
-const [plan, setPlan] = useState(null);
-const [copied, setCopied] = useState(false);
+function select(key, value) {
+  state.answers[key] = value;
+  render();
+}
 
-const sel = (s, v) => setAnswers(p => ({ …p, [s]: v }));
-const isSel = (s, v) => answers[s] === v;
+function next() {
+  state.step++;
+  render();
+}
 
-const Card = ({ s, v, icon, label, sub, accent }) => (
-<div onClick={() => sel(s, v)} style={{
-background: isSel(s, v) ? “rgba(200,240,69,0.07)” : “#161616”,
-border: `1.5px solid ${isSel(s, v) ? (accent || "#c8f045") : "#2a2a2a"}`,
-borderRadius: 14, padding: “16px 10px”, cursor: “pointer”,
-textAlign: “center”, transition: “border-color 0.15s”, userSelect: “none”,
-}}>
-<div style={{ fontSize: “1.9rem”, marginBottom: 6 }}>{icon}</div>
-<div style={{ fontWeight: 700, fontSize: “0.82rem”, color: “#f0f0f0” }}>{label}</div>
-{sub && <div style={{ color: “#555”, fontSize: “0.7rem”, marginTop: 3 }}>{sub}</div>}
-</div>
-);
-
-const Btn = ({ disabled, onClick, children, secondary }) => (
-<button onClick={onClick} disabled={disabled} style={{
-background: secondary ? “transparent” : (disabled ? “#1e1e1e” : “#c8f045”),
-color: secondary ? “#555” : (disabled ? “#444” : “#000”),
-border: secondary ? “1.5px solid #2a2a2a” : “none”,
-padding: “13px 26px”, borderRadius: 99, fontWeight: 700,
-fontSize: “0.88rem”, cursor: disabled ? “not-allowed” : “pointer”,
-marginRight: secondary ? 10 : 0,
-}}>{children}</button>
-);
+function back() {
+  state.step--;
+  render();
+}
 
 function generate() {
-const plec = answers[1];
-const cel = answers[2];
-const poziom = answers[3];
-const miejsce = answers[4];
-const dni = answers[5];
+  state.loading = true;
+  render();
 
-```
-const key = `${plec}_${cel}`;
-const p = PLANS[key];
-if (!p) return;
-
-const harmonogram = p.harmonogram[dni] || p.harmonogram["3 dni"];
-setPlan({ ...p, harmonogram, poziomNote: getLevelNote(poziom, miejsce), miejsceNote: getMiejsceNote(miejsce), plec, cel, poziom, miejsce, dni });
-```
-
+  setTimeout(() => {
+    const key = state.answers[1] + "_" + state.answers[2];
+    state.plan = PLANS[key];
+    state.loading = false;
+    save();
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, 500);
 }
 
-const goals = GOALS[answers[1]] || GOALS[“kobieta”];
-const progress = ((step - 1) / 5) * 100;
+function render() {
+  const app = document.getElementById("app");
+  const bar = document.getElementById("bar");
+  bar.style.width = ((state.step - 1) / 5) * 100 + "%";
 
-const Wrap = ({ children }) => (
-<div style={{ background: “#0d0d0d”, minHeight: “100vh”, fontFamily: “system-ui,-apple-system,sans-serif”, color: “#f0f0f0” }}>
-<div style={{ maxWidth: 640, margin: “0 auto”, padding: “30px 18px 80px” }}>{children}</div>
-</div>
-);
+  if (state.loading) {
+    app.innerHTML = "<p>Generowanie planu...</p>";
+    return;
+  }
 
-// ── WYNIK ──
-if (plan) {
-const goalLabel = […GOALS.kobieta, …GOALS.mezczyzna].find(g => g.value === plan.cel)?.label || plan.cel;
-return (
-<Wrap>
-{/* Header */}
-<div style={{ background: “#161616”, border: “1.5px solid #2a2a2a”, borderRadius: 18, padding: “20px 22px”, marginBottom: 16 }}>
-<div style={{ color: “#c8f045”, fontSize: 10, fontWeight: 700, letterSpacing: “0.15em”, marginBottom: 6 }}>✦ PLAN GOTOWY</div>
-<div style={{ fontSize: “1.4rem”, fontWeight: 800, marginBottom: 4 }}>Twój plan treningowy</div>
-<div style={{ color: “#666”, fontSize: “0.78rem” }}>{plan.plec === “kobieta” ? “👩” : “👨”} {plan.plec} · {goalLabel} · {plan.dni}</div>
-</div>
+  if (state.plan) {
+    app.innerHTML = `
+      <h2>Twój plan</h2>
+      <p>${state.plan.opis}</p>
+      <ul>
+        ${state.plan.trening.map(t => `<li>${t}</li>`).join("")}
+      </ul>
+      <button class="btn primary" onclick="reset()">Nowy plan</button>
+    `;
+    return;
+  }
 
-```
-    {/* Opis */}
-    <div style={{ background: "#161616", border: "1.5px solid #2a2a2a", borderRadius: 18, padding: "18px 20px", marginBottom: 12 }}>
-      <div style={{ color: "#c8f045", fontWeight: 700, fontSize: "0.85rem", marginBottom: 8, letterSpacing: "0.05em" }}>📋 O PLANIE</div>
-      <p style={{ color: "#ccc", fontSize: "0.9rem", lineHeight: 1.7, margin: 0 }}>{plan.opis}</p>
-      {plan.poziomNote && <p style={{ color: "#888", fontSize: "0.82rem", marginTop: 10, marginBottom: 0 }}>{plan.poziomNote}</p>}
-      {plan.miejsceNote && <p style={{ color: "#888", fontSize: "0.82rem", marginTop: 6, marginBottom: 0 }}>{plan.miejsceNote}</p>}
-    </div>
+  if (state.step === 1) {
+    app.innerHTML = `
+      <h2>Kim jesteś?</h2>
+      <div onclick="select(1,'kobieta')" class="card">👩 Kobieta</div>
+      <div onclick="select(1,'mezczyzna')" class="card">👨 Mężczyzna</div>
+      <br>
+      <button class="btn primary" onclick="next()">Dalej</button>
+    `;
+  }
 
-    {/* Harmonogram */}
-    <div style={{ background: "#161616", border: "1.5px solid #2a2a2a", borderRadius: 18, padding: "18px 20px", marginBottom: 12 }}>
-      <div style={{ color: "#c8f045", fontWeight: 700, fontSize: "0.85rem", marginBottom: 12, letterSpacing: "0.05em" }}>📅 HARMONOGRAM TYGODNIA</div>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.86rem" }}>
-        <thead>
-          <tr>{["Dzień", "Partia", "Czas"].map(h => <th key={h} style={{ padding: "7px 10px", textAlign: "left", color: "#555", fontWeight: 600, fontSize: "0.72rem", letterSpacing: "0.07em", background: "#1a1a1a", borderBottom: "1px solid #2a2a2a" }}>{h}</th>)}</tr>
-        </thead>
-        <tbody>
-          {plan.harmonogram.map((row, i) => (
-            <tr key={i}>
-              <td style={{ padding: "9px 10px", borderBottom: "1px solid #1e1e1e", color: "#f0f0f0", fontWeight: 600 }}>{row.dzien}</td>
-              <td style={{ padding: "9px 10px", borderBottom: "1px solid #1e1e1e", color: "#ccc" }}>{row.partia}</td>
-              <td style={{ padding: "9px 10px", borderBottom: "1px solid #1e1e1e", color: "#888" }}>{row.czas}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+  if (state.step === 2) {
+    const goals = GOALS[state.answers[1]] || [];
+    app.innerHTML = `
+      <h2>Cel</h2>
+      ${goals.map(g => `<div class="card" onclick="select(2,'${g.value}')">${g.label}</div>`).join("")}
+      <br>
+      <button class="btn secondary" onclick="back()">Wróć</button>
+      <button class="btn primary" onclick="next()">Dalej</button>
+    `;
+  }
 
-    {/* Treningi */}
-    {plan.treningi.map((trening, ti) => (
-      <div key={ti} style={{ background: "#161616", border: "1.5px solid #2a2a2a", borderRadius: 18, padding: "18px 20px", marginBottom: 12 }}>
-        <div style={{ color: "#c8f045", fontWeight: 700, fontSize: "0.85rem", marginBottom: 12, letterSpacing: "0.05em" }}>🏋️ {trening.nazwa.toUpperCase()}</div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.84rem" }}>
-          <thead>
-            <tr>{["Ćwiczenie", "Serie", "Powt.", "Uwagi"].map(h => <th key={h} style={{ padding: "7px 8px", textAlign: "left", color: "#555", fontWeight: 600, fontSize: "0.7rem", letterSpacing: "0.07em", background: "#1a1a1a", borderBottom: "1px solid #2a2a2a" }}>{h}</th>)}</tr>
-          </thead>
-          <tbody>
-            {trening.cwiczenia.map((c, ci) => (
-              <tr key={ci}>
-                <td style={{ padding: "9px 8px", borderBottom: "1px solid #1e1e1e", color: "#f0f0f0", fontWeight: 500 }}>{c.cwiczenie}</td>
-                <td style={{ padding: "9px 8px", borderBottom: "1px solid #1e1e1e", color: "#c8f045", fontWeight: 700, textAlign: "center" }}>{c.serie}</td>
-                <td style={{ padding: "9px 8px", borderBottom: "1px solid #1e1e1e", color: "#ccc" }}>{c.powt}</td>
-                <td style={{ padding: "9px 8px", borderBottom: "1px solid #1e1e1e", color: "#666", fontSize: "0.78rem" }}>{c.uwagi}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    ))}
+  if (state.step === 3) {
+    app.innerHTML = `
+      <h2>Poziom</h2>
+      <div class="card" onclick="select(3,'poczatkujacy')">🌱 Początkujący</div>
+      <div class="card" onclick="select(3,'sredni')">💪 Średni</div>
+      <div class="card" onclick="select(3,'zaawansowany')">🔥 Zaawansowany</div>
+      <br>
+      <button class="btn secondary" onclick="back()">Wróć</button>
+      <button class="btn primary" onclick="next()">Dalej</button>
+    `;
+  }
 
-    {/* Wskazówki */}
-    <div style={{ background: "#161616", border: "1.5px solid #2a2a2a", borderRadius: 18, padding: "18px 20px", marginBottom: 12 }}>
-      <div style={{ color: "#c8f045", fontWeight: 700, fontSize: "0.85rem", marginBottom: 12, letterSpacing: "0.05em" }}>💡 WSKAZÓWKI</div>
-      {plan.wskazowki.map((w, i) => (
-        <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8 }}>
-          <div style={{ color: "#c8f045", fontWeight: 700, minWidth: 16 }}>{i + 1}.</div>
-          <div style={{ color: "#ccc", fontSize: "0.88rem", lineHeight: 1.6 }}>{w}</div>
-        </div>
-      ))}
-    </div>
+  if (state.step === 4) {
+    app.innerHTML = `
+      <h2>Miejsce</h2>
+      <div class="card" onclick="select(4,'silownia')">🏋️ Siłownia</div>
+      <div class="card" onclick="select(4,'dom')">🏠 Dom</div>
+      <br>
+      <button class="btn secondary" onclick="back()">Wróć</button>
+      <button class="btn primary" onclick="next()">Dalej</button>
+    `;
+  }
 
-    {/* Progresja */}
-    <div style={{ background: "#161616", border: "1.5px solid #2a2a2a", borderRadius: 18, padding: "18px 20px", marginBottom: 20 }}>
-      <div style={{ color: "#c8f045", fontWeight: 700, fontSize: "0.85rem", marginBottom: 8, letterSpacing: "0.05em" }}>📈 PROGRESJA</div>
-      <p style={{ color: "#ccc", fontSize: "0.88rem", lineHeight: 1.7, margin: 0 }}>{plan.progresja}</p>
-    </div>
-
-    {/* Akcje */}
-    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-      <button onClick={() => { setStep(1); setAnswers({}); setPlan(null); }}
-        style={{ background: "#c8f045", color: "#000", border: "none", padding: "13px 26px", borderRadius: 99, fontWeight: 700, fontSize: "0.88rem", cursor: "pointer" }}>
-        ← Nowy plan
-      </button>
-      <button onClick={() => {
-        const txt = plan.treningi.flatMap(t => [t.nazwa, ...t.cwiczenia.map(c => `${c.cwiczenie} – ${c.serie} serie x ${c.powt}`)]).join("\n");
-        navigator.clipboard.writeText(txt);
-        setCopied(true); setTimeout(() => setCopied(false), 2000);
-      }} style={{ background: "#1e1e1e", color: "#ccc", border: "1.5px solid #2a2a2a", padding: "13px 26px", borderRadius: 99, fontWeight: 600, fontSize: "0.88rem", cursor: "pointer" }}>
-        {copied ? "✓ Skopiowano!" : "📋 Kopiuj ćwiczenia"}
-      </button>
-    </div>
-  </Wrap>
-);
-```
-
+  if (state.step === 5) {
+    app.innerHTML = `
+      <h2>Dni treningowe</h2>
+      <div class="card" onclick="select(5,'2')">2 dni</div>
+      <div class="card" onclick="select(5,'3')">3 dni</div>
+      <div class="card" onclick="select(5,'4')">4+ dni</div>
+      <br>
+      <button class="btn secondary" onclick="back()">Wróć</button>
+      <button class="btn primary" onclick="generate()">Generuj</button>
+    `;
+  }
 }
 
-// ── FORMULARZ ──
-return (
-<Wrap>
-<div style={{ textAlign: “center”, marginBottom: 38 }}>
-<div style={{ color: “#c8f045”, fontSize: 11, letterSpacing: “0.3em”, fontWeight: 700, marginBottom: 12 }}>⚡ FITPLAN AI</div>
-<div style={{ fontSize: “clamp(1.9rem, 9vw, 3rem)”, fontWeight: 800, lineHeight: 1.1, marginBottom: 10 }}>
-Twój plan<br /><span style={{ color: “#c8f045” }}>treningowy</span>
-</div>
-<div style={{ color: “#555”, fontSize: “0.88rem” }}>Odpowiedz na 5 pytań i otrzymaj gotowy plan.</div>
-</div>
-
-```
-  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32 }}>
-    <div style={{ flex: 1, height: 3, background: "#1e1e1e", borderRadius: 99, overflow: "hidden" }}>
-      <div style={{ height: "100%", width: `${progress}%`, background: "#c8f045", borderRadius: 99, transition: "width 0.4s" }} />
-    </div>
-    <div style={{ color: "#444", fontSize: 11, fontWeight: 600 }}>{step} / 5</div>
-  </div>
-
-  <div style={{ color: "#444", fontSize: 10, letterSpacing: "0.25em", fontWeight: 700, marginBottom: 8 }}>KROK {step}</div>
-
-  {step === 1 && <>
-    <div style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: 20 }}>Kim jesteś?</div>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
-      <Card s={1} v="kobieta" icon="👩" label="Kobieta" accent="#ff6b9d" />
-      <Card s={1} v="mezczyzna" icon="👨" label="Mężczyzna" accent="#4da6ff" />
-    </div>
-    <Btn disabled={!answers[1]} onClick={() => setStep(2)}>Dalej →</Btn>
-  </>}
-
-  {step === 2 && <>
-    <div style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: 20 }}>Co chcesz rozwinąć?</div>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
-      {goals.map(g => <Card key={g.value} s={2} v={g.value} icon={g.icon} label={g.label} />)}
-    </div>
-    <Btn secondary onClick={() => setStep(1)}>← Wróć</Btn>
-    <Btn disabled={!answers[2]} onClick={() => setStep(3)}>Dalej →</Btn>
-  </>}
-
-  {step === 3 && <>
-    <div style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: 20 }}>Jaki masz poziom?</div>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 24 }}>
-      <Card s={3} v="poczatkujacy" icon="🌱" label="Początkujący" sub="0–6 mies." />
-      <Card s={3} v="sredni" icon="💪" label="Średni" sub="6 mies.–2 lata" />
-      <Card s={3} v="zaawansowany" icon="🔥" label="Zaawansowany" sub="2+ lata" />
-    </div>
-    <Btn secondary onClick={() => setStep(2)}>← Wróć</Btn>
-    <Btn disabled={!answers[3]} onClick={() => setStep(4)}>Dalej →</Btn>
-  </>}
-
-  {step === 4 && <>
-    <div style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: 20 }}>Gdzie trenujesz?</div>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 24 }}>
-      <Card s={4} v="silownia" icon="🏋️" label="Siłownia" sub="Pełny sprzęt" />
-      <Card s={4} v="dom_gumy" icon="🏠" label="Dom" sub="Gumy / hantle" />
-      <Card s={4} v="dom_brak" icon="🧘" label="Dom" sub="Bez sprzętu" />
-    </div>
-    <Btn secondary onClick={() => setStep(3)}>← Wróć</Btn>
-    <Btn disabled={!answers[4]} onClick={() => setStep(5)}>Dalej →</Btn>
-  </>}
-
-  {step === 5 && <>
-    <div style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: 20 }}>Ile dni w tygodniu możesz trenować?</div>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 24 }}>
-      <Card s={5} v="2 dni" icon="2️⃣" label="2 dni" />
-      <Card s={5} v="3 dni" icon="3️⃣" label="3 dni" />
-      <Card s={5} v="4+ dni" icon="4️⃣" label="4+ dni" />
-    </div>
-    <Btn secondary onClick={() => setStep(4)}>← Wróć</Btn>
-    <Btn disabled={!answers[5]} onClick={generate}>Generuj plan ✨</Btn>
-  </>}
-</Wrap>
-```
-
-);
+function reset() {
+  state.step = 1;
+  state.answers = {};
+  state.plan = null;
+  render();
 }
+
+load();
+render();
+</script>
+
+</body>
+</html>

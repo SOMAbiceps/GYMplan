@@ -9,20 +9,17 @@
 body {
   margin:0;
   font-family: system-ui;
-  background:#0d0d0d;
+  background:#0b0b0b;
   color:#fff;
 }
 
 .wrap {
-  max-width:600px;
+  max-width:620px;
   margin:auto;
-  padding:30px 16px 80px;
+  padding:30px 18px 80px;
 }
 
-h1 {
-  text-align:center;
-  margin-bottom:20px;
-}
+h1 { text-align:center; }
 
 .grid {
   display:grid;
@@ -33,24 +30,20 @@ h1 {
 .card {
   background:#161616;
   border:1.5px solid #2a2a2a;
-  border-radius:14px;
+  border-radius:16px;
   padding:18px;
   text-align:center;
   cursor:pointer;
   transition:0.2s;
 }
 
-.card:hover {
-  border-color:#c8f045;
-}
-
 .card.active {
   border-color:#c8f045;
-  background:rgba(200,240,69,0.08);
+  box-shadow:0 0 10px rgba(200,240,69,0.3);
 }
 
 .btn {
-  padding:12px 20px;
+  padding:12px 22px;
   border-radius:999px;
   font-weight:700;
   border:none;
@@ -61,21 +54,6 @@ h1 {
 .primary { background:#c8f045; color:#000; }
 .secondary { background:#1e1e1e; color:#aaa; }
 
-.progress {
-  height:4px;
-  background:#1e1e1e;
-  border-radius:999px;
-  overflow:hidden;
-  margin-bottom:20px;
-}
-
-.bar {
-  height:100%;
-  background:#c8f045;
-  width:0%;
-  transition:0.3s;
-}
-
 input {
   width:100%;
   padding:12px;
@@ -83,7 +61,27 @@ input {
   border:1px solid #2a2a2a;
   background:#161616;
   color:#fff;
-  margin-bottom:10px;
+  margin-top:10px;
+}
+
+.plan {
+  background:#161616;
+  padding:20px;
+  border-radius:16px;
+  border:1px solid #2a2a2a;
+}
+
+.progressBar {
+  height:6px;
+  background:#1e1e1e;
+  border-radius:999px;
+  margin:10px 0;
+}
+
+.progressFill {
+  height:100%;
+  background:#c8f045;
+  border-radius:999px;
 }
 </style>
 </head>
@@ -91,148 +89,208 @@ input {
 <body>
 <div class="wrap">
 <h1>FitPlan AI</h1>
-
-<div class="progress"><div class="bar" id="bar"></div></div>
 <div id="app"></div>
-
 </div>
 
 <script>
 const state = {
   step: 0,
+  user: null,
   answers: {},
-  user: null
+  plan: null,
+  done: []
+};
+
+const GOALS = {
+  kobieta: ["posladki","brzuch","ramiona","redukcja"],
+  mezczyzna: ["klatka","plecy","nogi","masa"]
+};
+
+const PLANS = {
+  posladki: [
+    "Hip Thrust 4x12",
+    "RDL 4x10",
+    "Wykroki 3x12",
+    "Kickback 3x15"
+  ],
+  brzuch: [
+    "Plank 4x40s",
+    "Dead Bug",
+    "Russian Twist",
+    "Leg Raises"
+  ],
+  klatka: [
+    "Bench Press 5x5",
+    "Incline DB",
+    "Dipy",
+    "Rozpiętki"
+  ],
+  plecy: [
+    "Podciąganie",
+    "Wiosłowanie",
+    "Face Pull",
+    "Lat Pulldown"
+  ],
+  masa: [
+    "Przysiad",
+    "Martwy ciąg",
+    "Bench Press",
+    "OHP"
+  ],
+  redukcja: [
+    "HIIT 20 min",
+    "Full Body",
+    "Cardio",
+    "Core"
+  ]
 };
 
 // ─── LOGIN ───
-function renderLogin() {
-  app.innerHTML = `
-    <h2>Twoje konto</h2>
-    <input id="name" placeholder="Imię">
-    <button class="btn primary" onclick="login()">Start</button>
-  `;
-}
-
-function login() {
+function login(){
   const name = document.getElementById("name").value;
-  if (!name) return alert("Podaj imię");
+  if(!name) return alert("Podaj imię");
 
-  state.user = { name };
+  state.user = {name};
   localStorage.setItem("user", JSON.stringify(state.user));
   state.step = 1;
   render();
 }
 
 // ─── SELECT ───
-function select(step, value) {
-  state.answers[step] = value;
+function select(step,val){
+  state.answers[step]=val;
   render();
 }
 
 // ─── GENERATE ───
-function generate() {
-  const {1:plec, 2:cel, 6:waga} = state.answers;
+function generate(){
+  const goal = state.answers[2];
+  const waga = state.answers[3];
 
   const kcal = Math.round(waga * 30);
+  const exercises = PLANS[goal] || [];
+
+  state.plan = { goal, kcal, exercises };
+  state.done = [];
+
+  localStorage.setItem("plan", JSON.stringify(state.plan));
+  localStorage.setItem("done", JSON.stringify(state.done));
+
+  renderPlan();
+}
+
+// ─── CHECKBOX ───
+function toggle(i){
+  if(state.done.includes(i)){
+    state.done = state.done.filter(x => x!==i);
+  } else {
+    state.done.push(i);
+  }
+
+  localStorage.setItem("done", JSON.stringify(state.done));
+  renderPlan();
+}
+
+// ─── PLAN VIEW ───
+function renderPlan(){
+  const app = document.getElementById("app");
+
+  const done = state.done.length;
+  const total = state.plan.exercises.length;
+  const percent = Math.round((done/total)*100);
 
   app.innerHTML = `
-    <h2>🔥 Twój plan</h2>
-    <p><b>${state.user.name}</b>, oto Twój plan:</p>
+    <div class="plan">
+      <h2>🔥 Twój plan</h2>
+      <p>${state.user.name}</p>
+      <p>Kcal: ${state.plan.kcal}</p>
 
-    <p>Cel: ${cel}</p>
-    <p>Kcal: ${kcal}</p>
+      <div class="progressBar">
+        <div class="progressFill" style="width:${percent}%"></div>
+      </div>
+      <p>${percent}% ukończone</p>
 
-    <ul>
-      <li>Trening 3x w tygodniu</li>
-      <li>Hip thrust / bench / pull</li>
-      <li>Cardio 2x</li>
-    </ul>
+      ${state.plan.exercises.map((e,i)=>`
+        <div onclick="toggle(${i})" 
+          style="padding:10px; margin:6px 0; cursor:pointer; border-radius:10px;
+          background:${state.done.includes(i)?"#c8f04522":"#111"}">
+          ${state.done.includes(i)?"✔️":""} ${e}
+        </div>
+      `).join("")}
 
-    <button class="btn primary" onclick="reset()">Nowy plan</button>
+      <button class="btn primary" onclick="reset()">Nowy plan</button>
+    </div>
   `;
-
-  window.scrollTo({top:0, behavior:"smooth"});
 }
 
 // ─── RENDER ───
-function render() {
+function render(){
   const app = document.getElementById("app");
-  const bar = document.getElementById("bar");
 
-  bar.style.width = (state.step/6)*100 + "%";
-
-  if (!state.user) return renderLogin();
-
-  if (state.step === 1) {
+  if(!state.user){
     app.innerHTML = `
-      <h2>Kim jesteś?</h2>
+      <input id="name" placeholder="Imię">
+      <button class="btn primary" onclick="login()">Start</button>
+    `;
+    return;
+  }
+
+  if(state.step===1){
+    app.innerHTML = `
+      <h2>Płeć</h2>
       <div class="grid">
-        <div class="card ${state.answers[1]=='kobieta'?'active':''}" onclick="select(1,'kobieta')">👩 Kobieta</div>
-        <div class="card ${state.answers[1]=='mezczyzna'?'active':''}" onclick="select(1,'mezczyzna')">👨 Mężczyzna</div>
+        <div class="card" onclick="select(1,'kobieta')">👩</div>
+        <div class="card" onclick="select(1,'mezczyzna')">👨</div>
       </div>
       <button class="btn primary" onclick="state.step=2;render()">Dalej</button>
     `;
   }
 
-  if (state.step === 2) {
+  if(state.step===2){
+    const goals = GOALS[state.answers[1]] || [];
     app.innerHTML = `
       <h2>Cel</h2>
       <div class="grid">
-        <div class="card ${state.answers[2]=='masa'?'active':''}" onclick="select(2,'masa')">💪 Masa</div>
-        <div class="card ${state.answers[2]=='redukcja'?'active':''}" onclick="select(2,'redukcja')">🔥 Redukcja</div>
+        ${goals.map(g=>`<div class="card" onclick="select(2,'${g}')">${g}</div>`).join("")}
       </div>
-      <button class="btn secondary" onclick="state.step=1;render()">Wróć</button>
       <button class="btn primary" onclick="state.step=3;render()">Dalej</button>
     `;
   }
 
-  if (state.step === 3) {
+  if(state.step===3){
     app.innerHTML = `
-      <h2>Wzrost (cm)</h2>
-      <input id="h" placeholder="np. 180">
-      <button class="btn primary" onclick="state.answers[5]=h.value;state.step=4;render()">Dalej</button>
+      <h2>Waga</h2>
+      <input id="w" placeholder="kg">
+      <button class="btn primary" onclick="state.answers[3]=w.value;generate()">Generuj</button>
     `;
-  }
-
-  if (state.step === 4) {
-    app.innerHTML = `
-      <h2>Waga (kg)</h2>
-      <input id="w" placeholder="np. 80">
-      <button class="btn primary" onclick="state.answers[6]=w.value;state.step=5;render()">Dalej</button>
-    `;
-  }
-
-  if (state.step === 5) {
-    app.innerHTML = `
-      <h2>Ile dni?</h2>
-      <div class="grid">
-        <div class="card" onclick="select(7,2)">2 dni</div>
-        <div class="card" onclick="select(7,3)">3 dni</div>
-        <div class="card" onclick="select(7,4)">4+ dni</div>
-      </div>
-      <button class="btn primary" onclick="state.step=6;render()">Dalej</button>
-    `;
-  }
-
-  if (state.step === 6) {
-    generate();
   }
 }
 
-function reset() {
-  state.step = 1;
-  state.answers = {};
+// ─── RESET ───
+function reset(){
+  localStorage.removeItem("plan");
+  localStorage.removeItem("done");
+  state.step=1;
+  state.answers={};
   render();
 }
 
 // ─── INIT ───
 const savedUser = localStorage.getItem("user");
-if (savedUser) {
+const savedPlan = localStorage.getItem("plan");
+const savedDone = localStorage.getItem("done");
+
+if(savedUser){
   state.user = JSON.parse(savedUser);
-  state.step = 1;
 }
 
-render();
+if(savedPlan){
+  state.plan = JSON.parse(savedPlan);
+  state.done = JSON.parse(savedDone) || [];
+  renderPlan();
+} else {
+  render();
+}
 </script>
 
 </body>

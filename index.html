@@ -3,330 +3,235 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gym App Pro</title>
+<title>Gym Planner Pro</title>
 
 <style>
-:root{
---bg:#f0f0f0;
---card:#ffffff;
---accent:#ff3b3b;
+body {
+  margin:0;
+  font-family: system-ui;
+  background:#1c1c1e;
+  color:white;
 }
 
-body{
-margin:0;
-font-family:-apple-system;
-background:var(--bg);
+.container {
+  max-width:1200px;
+  margin:auto;
+  padding:20px;
 }
 
-/* LOGIN */
-#login{
-display:flex;
-height:100vh;
-justify-content:center;
-align-items:center;
+h1 {
+  font-size:32px;
 }
 
-.box{
-background:white;
-padding:30px;
-border-radius:20px;
-width:320px;
+.btn {
+  background:#4ade80;
+  color:black;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  font-weight:bold;
+  cursor:pointer;
+  width:100%;
+  margin-top:10px;
+  font-size:16px;
 }
 
-input,select{
-width:100%;
-padding:12px;
-margin:8px 0;
-border-radius:10px;
-border:1px solid #ddd;
+.card {
+  background:#2c2c2e;
+  padding:20px;
+  border-radius:16px;
+  margin-bottom:15px;
 }
 
-button{
-padding:12px;
-border:none;
-border-radius:12px;
-background:var(--accent);
-color:white;
-font-weight:bold;
-cursor:pointer;
+input {
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  margin-top:10px;
+  background:#3a3a3c;
+  color:white;
 }
 
-/* APP */
-#app{display:none;}
-
-.container{
-display:flex;
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:15px;
 }
 
-/* SIDEBAR */
-.sidebar{
-width:220px;
-background:white;
-padding:15px;
-height:100vh;
-overflow:auto;
+.exercise {
+  background:#3a3a3c;
+  padding:15px;
+  border-radius:12px;
 }
 
-.user{
-padding:10px;
-border-radius:10px;
-margin-bottom:5px;
-background:#eee;
-cursor:pointer;
+.timer {
+  font-size:28px;
+  text-align:center;
+  margin-top:10px;
 }
 
-.user.active{
-background:var(--accent);
-color:white;
-}
-
-.main{
-flex:1;
-padding:20px;
-}
-
-/* SPLIT */
-.split button{
-margin:5px;
-}
-
-/* EXERCISE */
-.card{
-background:white;
-padding:15px;
-border-radius:15px;
-margin-bottom:10px;
-}
-
-.set{
-display:flex;
-gap:5px;
-margin-top:5px;
-}
-
-.set input{
-flex:1;
-}
-
-/* TIMER */
-.timer{
-position:fixed;
-bottom:20px;
-right:20px;
-background:black;
-color:white;
-padding:20px;
-border-radius:50%;
-display:none;
-font-size:20px;
-}
 </style>
 </head>
 
 <body>
 
+<div class="container">
+
+<h1>Gym Planner</h1>
+
 <!-- LOGIN -->
-<div id="login">
-<div class="box">
+<div id="auth" class="card">
 <h2>Konto</h2>
-<input id="user" placeholder="Login">
-<input id="pass" type="password" placeholder="Hasło">
-<input id="weight" placeholder="Waga">
-<input id="height" placeholder="Wzrost">
-
-<select id="goal">
-<option value="mass">Masa</option>
-<option value="cut">Redukcja</option>
-<option value="strength">Siła</option>
-</select>
-
-<button id="startBtn">Start</button>
-</div>
+<input id="username" placeholder="Nazwa użytkownika">
+<button class="btn" onclick="login()">Zaloguj</button>
 </div>
 
 <!-- APP -->
-<div id="app">
-<div class="container">
+<div id="app" style="display:none;">
 
-<div class="sidebar">
-<h4>Konta</h4>
-<div id="usersList"></div>
-<button onclick="logout()">Wyloguj</button>
+<div class="card">
+<h2 id="welcome"></h2>
+<button class="btn" onclick="logout()">Wyloguj</button>
 </div>
 
-<div class="main">
+<!-- WYBÓR PLANU -->
+<div class="card">
+<h2>Wybierz trening</h2>
 
-<h3 id="welcome"></h3>
-
-<div class="split">
-<button data-split="ppl">Push/Pull/Legs</button>
-<button data-split="ul">Upper/Lower</button>
-</div>
-
-<div id="days"></div>
-
-<div id="plan"></div>
-
+<div class="grid">
+<button class="btn" onclick="startWorkout('push')">Push</button>
+<button class="btn" onclick="startWorkout('pull')">Pull</button>
+<button class="btn" onclick="startWorkout('legs')">Legs</button>
+<button class="btn" onclick="startWorkout('upper')">Upper</button>
+<button class="btn" onclick="startWorkout('lower')">Lower</button>
 </div>
 
 </div>
+
+<!-- TRENING -->
+<div id="workout" class="card" style="display:none;">
+<h2 id="workoutTitle"></h2>
+
+<div id="exerciseList"></div>
+
+<div class="timer" id="timer">60</div>
+<button class="btn" onclick="startTimer()">Start odpoczynku</button>
+
 </div>
 
-<div id="timer" class="timer">60</div>
+</div>
+
+</div>
 
 <script>
 
-const loginDiv=document.getElementById("login");
-const appDiv=document.getElementById("app");
-const startBtn=document.getElementById("startBtn");
-const usersList=document.getElementById("usersList");
-const welcome=document.getElementById("welcome");
-const planDiv=document.getElementById("plan");
-const daysDiv=document.getElementById("days");
-const timer=document.getElementById("timer");
+let user = localStorage.getItem("user");
 
-let currentUserName=null;
-let currentUser=null;
-let split="ppl";
-
-/* LOGIN */
-startBtn.addEventListener("click", ()=>{
-const u=user.value;
-const p=pass.value;
-
-if(!u||!p) return alert("Dane");
-
-let users=JSON.parse(localStorage.getItem("users")||"{}");
-
-users[u]={
-pass:p,
-weight:weight.value,
-height:height.value,
-goal:goal.value,
-progress:{}
-};
-
-localStorage.setItem("users",JSON.stringify(users));
-
-loadUsers();
-selectUser(u);
-});
-
-/* USERS */
-function loadUsers(){
-usersList.innerHTML="";
-let users=JSON.parse(localStorage.getItem("users")||"{}");
-
-Object.keys(users).forEach(name=>{
-let div=document.createElement("div");
-div.className="user";
-div.innerText=name;
-
-div.onclick=()=>selectUser(name);
-
-usersList.appendChild(div);
-});
+if(user){
+  showApp(user);
 }
 
-function selectUser(name){
-let users=JSON.parse(localStorage.getItem("users"));
-currentUserName=name;
-currentUser=users[name];
-
-loginDiv.style.display="none";
-appDiv.style.display="block";
-
-welcome.innerText=name+" | "+currentUser.goal;
-
-generateDays();
+function login(){
+  let name = document.getElementById("username").value;
+  if(name){
+    localStorage.setItem("user", name);
+    showApp(name);
+  }
 }
 
-/* SPLIT */
-document.querySelectorAll(".split button").forEach(btn=>{
-btn.onclick=()=>{
-split=btn.dataset.split;
-generateDays();
-};
-});
-
-/* DAYS */
-function generateDays(){
-daysDiv.innerHTML="";
-
-let days=split==="ppl"
-?["push","pull","legs"]
-:["upper","lower"];
-
-days.forEach(d=>{
-let b=document.createElement("button");
-b.innerText=d;
-b.onclick=()=>loadPlan(d);
-daysDiv.appendChild(b);
-});
-}
-
-/* PLAN */
-function loadPlan(day){
-planDiv.innerHTML="";
-
-let exercises={
-push:["Bench","Incline","Shoulder","Lateral","Triceps"],
-pull:["Pull","Row","Lat","Face Pull","Biceps"],
-legs:["Squat","Deadlift","Curl","Calf"],
-upper:["Bench","Row","Shoulder","Pull","Arms"],
-lower:["Squat","Deadlift","Leg Curl","Calf"]
-};
-
-exercises[day].forEach(ex=>{
-let div=document.createElement("div");
-div.className="card";
-
-div.innerHTML=`<h4>${ex}</h4>`;
-
-for(let i=0;i<3;i++){
-let set=document.createElement("div");
-set.className="set";
-
-set.innerHTML=`
-<input placeholder="kg">
-<input placeholder="powt.">
-<button class="startSet">▶</button>
-`;
-
-set.querySelector(".startSet").addEventListener("click", startTimer);
-
-div.appendChild(set);
-}
-
-planDiv.appendChild(div);
-});
-}
-
-/* TIMER */
-function startTimer(){
-let time=60;
-timer.style.display="block";
-timer.innerText=time;
-
-let t=setInterval(()=>{
-time--;
-timer.innerText=time;
-
-if(time<=0){
-clearInterval(t);
-timer.style.display="none";
-}
-},1000);
-}
-
-/* LOGOUT */
 function logout(){
-loginDiv.style.display="flex";
-appDiv.style.display="none";
+  localStorage.removeItem("user");
+  location.reload();
 }
 
-/* INIT */
-loadUsers();
+function showApp(name){
+  document.getElementById("auth").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("welcome").innerText="Cześć " + name;
+}
+
+const plans = {
+push:[
+["Bench Press",4,8],
+["Incline DB Press",4,10],
+["Shoulder Press",4,8],
+["Lateral Raises",4,12],
+["Triceps Pushdown",4,12],
+["Dips",3, max=12]
+],
+pull:[
+["Pull Ups",4,8],
+["Barbell Row",4,8],
+["Lat Pulldown",4,10],
+["Face Pull",4,12],
+["Biceps Curl",4,10],
+["Hammer Curl",3,12]
+],
+legs:[
+["Squat",4,8],
+["Leg Press",4,10],
+["RDL",4,8],
+["Leg Curl",4,12],
+["Calf Raises",5,15]
+],
+upper:[
+["Bench Press",4,8],
+["Pull Ups",4,8],
+["Shoulder Press",4,8],
+["Row",4,10],
+["Biceps",3,12],
+["Triceps",3,12]
+],
+lower:[
+["Squat",4,8],
+["RDL",4,8],
+["Leg Press",4,10],
+["Leg Curl",4,12],
+["Calves",5,15]
+]
+};
+
+function startWorkout(type){
+  document.getElementById("workout").style.display="block";
+  document.getElementById("workoutTitle").innerText=type.toUpperCase();
+
+  let list = document.getElementById("exerciseList");
+  list.innerHTML="";
+
+  plans[type].forEach(ex=>{
+    let div=document.createElement("div");
+    div.className="exercise";
+
+    div.innerHTML = `
+      <strong>${ex[0]}</strong><br>
+      Serie: ${ex[1]} | Powtórzenia: ${ex[2]}<br>
+      <input placeholder="kg">
+      <input placeholder="powtórzenia">
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+let time=60;
+let interval;
+
+function startTimer(){
+  clearInterval(interval);
+  time=60;
+
+  interval=setInterval(()=>{
+    time--;
+    document.getElementById("timer").innerText=time;
+
+    if(time<=0){
+      clearInterval(interval);
+      alert("Koniec odpoczynku!");
+    }
+
+  },1000);
+}
 
 </script>
 

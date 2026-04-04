@@ -1,93 +1,88 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FitPlan Pro</title>
 
 <style>
 :root {
-  --bg: #111;
-  --card: #1b1b1b;
+  --bg: #121212;
+  --card: #1e1e1e;
   --border: #2a2a2a;
   --text: #f5f5f5;
   --sub: #888;
-  --accent: #00e0ff;
+  --accent: #00ff88;
 }
 
-* { box-sizing: border-box; }
-
 body {
-  margin: 0;
+  margin:0;
   font-family: system-ui;
   background: var(--bg);
   color: var(--text);
 }
 
 .container {
-  max-width: 700px;
-  margin: auto;
-  padding: 20px;
+  max-width:700px;
+  margin:auto;
+  padding:20px;
 }
 
 .card {
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  transition: 0.2s;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:22px;
+  margin-bottom:16px;
 }
 
 .title {
-  font-size: 24px;
-  font-weight: 800;
-  margin-bottom: 10px;
+  font-size:26px;
+  font-weight:800;
+  margin-bottom:10px;
 }
 
 .btn {
-  padding: 14px;
-  border-radius: 999px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:999px;
+  font-weight:700;
+  font-size:16px;
   background: var(--accent);
-  color: #000;
-  width: 100%;
-  font-size: 16px;
-  margin-top: 10px;
+  color:#000;
+  margin-top:12px;
+  cursor:pointer;
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
 }
 
 .option {
-  padding: 18px;
-  text-align: center;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  cursor: pointer;
-  transition: 0.2s;
+  padding:18px;
+  text-align:center;
+  border:1px solid var(--border);
+  border-radius:14px;
+  cursor:pointer;
 }
 
 .option.active {
   border-color: var(--accent);
-  background: rgba(0,224,255,0.08);
+  background: rgba(0,255,136,0.1);
 }
 
-.small { font-size: 13px; color: var(--sub); }
-
 input {
-  width: 100%;
-  padding: 12px;
-  background: #111;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: white;
-  margin-top: 8px;
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#111;
+  color:white;
+  margin-top:10px;
+  font-size:16px;
 }
 </style>
 </head>
@@ -97,156 +92,191 @@ input {
 
 <script>
 let state = JSON.parse(localStorage.getItem("fitapp")) || {
-  user: null,
-  plan: null,
-  progress: {}
+  user:null,
+  plan:null,
+  progress:{},
+  goal:null
 };
 
-function save() {
-  localStorage.setItem("fitapp", JSON.stringify(state));
+function save(){ localStorage.setItem("fitapp", JSON.stringify(state)); }
+
+// ---------- KONTO ----------
+function renderAuth(){
+  app.innerHTML = `
+  <div class="card">
+    <div class="title">Stwórz konto</div>
+    <input id="name" placeholder="Imię">
+    <input id="weight" placeholder="Waga (kg)">
+    <button class="btn" onclick="createUser()">Start</button>
+  </div>`;
 }
 
-function setUser(data) {
-  state.user = data;
+function createUser(){
+  state.user = {
+    name: document.getElementById("name").value,
+    weight: document.getElementById("weight").value
+  };
   save();
   renderDashboard();
 }
 
-function selectOption(el, key, value) {
-  document.querySelectorAll(`[data-${key}]`).forEach(e => e.classList.remove("active"));
-  el.classList.add("active");
-  state[key] = value;
+// ---------- DASHBOARD ----------
+function renderDashboard(){
+  app.innerHTML = `
+  <div class="card">
+    <div class="title">Cześć ${state.user.name} 👋</div>
+    <div>Waga: ${state.user.weight} kg</div>
+  </div>
+
+  <div class="card">
+    <div class="title">Twój plan</div>
+    <button class="btn" onclick="renderGenerator()">Stwórz plan</button>
+  </div>`;
 }
 
-function generatePlan() {
-  const plan = {
-    name: "Plan: Góra ciała (siła + masa)",
-    workouts: [
-      {
-        name: "Push",
-        exercises: [
-          { name: "Wyciskanie sztangi", sets: 5, reps: "5" },
-          { name: "Wyciskanie hantli skos", sets: 4, reps: "10" },
-          { name: "OHP", sets: 4, reps: "8" },
-          { name: "Dipy", sets: 3, reps: "max" },
-          { name: "Triceps linka", sets: 3, reps: "12" }
-        ]
-      },
-      {
-        name: "Pull",
-        exercises: [
-          { name: "Podciąganie", sets: 4, reps: "max" },
-          { name: "Wiosłowanie sztangą", sets: 5, reps: "5" },
-          { name: "Face pull", sets: 3, reps: "15" },
-          { name: "Biceps hantle", sets: 3, reps: "12" }
-        ]
-      }
-    ]
+// ---------- GENERATOR ----------
+function renderGenerator(){
+  app.innerHTML = `
+  <div class="card">
+    <div class="title">Wybierz cel</div>
+    <div class="grid">
+      <div class="option" onclick="selectGoal(this,'gora')">Góra ciała</div>
+      <div class="option" onclick="selectGoal(this,'dol')">Dół ciała</div>
+      <div class="option" onclick="selectGoal(this,'masa')">Masa</div>
+      <div class="option" onclick="selectGoal(this,'redukcja')">Redukcja</div>
+    </div>
+    <button class="btn" onclick="generatePlan()">Generuj plan</button>
+  </div>`;
+}
+
+function selectGoal(el,goal){
+  document.querySelectorAll(".option").forEach(o=>o.classList.remove("active"));
+  el.classList.add("active");
+  state.goal = goal;
+}
+
+// ---------- PLAN ----------
+function generatePlan(){
+  const plans = {
+
+    masa: {
+      name:"Push / Pull / Legs (masa)",
+      workouts:[
+        {
+          name:"Push",
+          exercises:[
+            {name:"Wyciskanie sztangi",sets:5,reps:"5"},
+            {name:"Wyciskanie hantli skos",sets:4,reps:"10"},
+            {name:"OHP",sets:4,reps:"8"},
+            {name:"Dipy",sets:3,reps:"max"},
+            {name:"Rozpiętki",sets:3,reps:"12"},
+            {name:"Triceps linka",sets:3,reps:"12"}
+          ]
+        },
+        {
+          name:"Pull",
+          exercises:[
+            {name:"Podciąganie",sets:4,reps:"max"},
+            {name:"Wiosłowanie sztangą",sets:5,reps:"5"},
+            {name:"Lat pulldown",sets:4,reps:"10"},
+            {name:"Face pull",sets:3,reps:"15"},
+            {name:"Biceps hantle",sets:3,reps:"12"}
+          ]
+        },
+        {
+          name:"Legs",
+          exercises:[
+            {name:"Przysiad",sets:5,reps:"5"},
+            {name:"Leg press",sets:4,reps:"10"},
+            {name:"RDL",sets:4,reps:"10"},
+            {name:"Wykroki",sets:3,reps:"12"},
+            {name:"Łydki",sets:4,reps:"15"}
+          ]
+        }
+      ]
+    },
+
+    gora: {
+      name:"Góra ciała",
+      workouts:[
+        {
+          name:"Upper",
+          exercises:[
+            {name:"Wyciskanie sztangi",sets:5,reps:"5"},
+            {name:"Podciąganie",sets:4,reps:"max"},
+            {name:"OHP",sets:4,reps:"8"},
+            {name:"Wiosłowanie",sets:4,reps:"10"},
+            {name:"Biceps",sets:3,reps:"12"},
+            {name:"Triceps",sets:3,reps:"12"}
+          ]
+        }
+      ]
+    }
+
   };
 
-  state.plan = plan;
+  state.plan = plans[state.goal] || plans.masa;
   save();
   renderPlan();
 }
 
-function renderAuth() {
-  app.innerHTML = `
-    <div class="card">
-      <div class="title">Stwórz konto</div>
-      <input id="name" placeholder="Imię">
-      <input id="weight" placeholder="Waga (kg)">
-      <button class="btn" onclick="setUser({
-        name: name.value,
-        weight: weight.value
-      })">Start</button>
-    </div>
-  `;
-}
-
-function renderDashboard() {
-  app.innerHTML = `
-    <div class="card">
-      <div class="title">Cześć ${state.user.name} 👋</div>
-      <div class="small">Twoja waga: ${state.user.weight} kg</div>
-    </div>
-
-    <div class="card">
-      <div class="title">Twój plan</div>
-      <button class="btn" onclick="renderGenerator()">Generuj plan</button>
-    </div>
-  `;
-}
-
-function renderGenerator() {
-  app.innerHTML = `
-    <div class="card">
-      <div class="title">Wybierz cel</div>
-      <div class="grid">
-        <div class="option" onclick="selectOption(this,'goal','gora')" data-goal>Góra</div>
-        <div class="option" onclick="selectOption(this,'goal','dol')" data-goal>Dół</div>
-        <div class="option" onclick="selectOption(this,'goal','masa')" data-goal>Masa</div>
-        <div class="option" onclick="selectOption(this,'goal','redukcja')" data-goal>Redukcja</div>
-      </div>
-      <button class="btn" onclick="generatePlan()">Generuj</button>
-    </div>
-  `;
-}
-
-function renderPlan() {
+function renderPlan(){
   const p = state.plan;
 
   app.innerHTML = `
+  <div class="card">
+    <div class="title">${p.name}</div>
+    <button class="btn" onclick="startWorkout()">Start trening</button>
+  </div>
+
+  ${p.workouts.map(w=>`
     <div class="card">
-      <div class="title">${p.name}</div>
-      <button class="btn" onclick="startWorkout()">Start trening</button>
-    </div>
-    ${p.workouts.map(w => `
-      <div class="card">
-        <b>${w.name}</b>
-        ${w.exercises.map(e => `
-          <div style="margin-top:8px;">
-            ${e.name} — ${e.sets} x ${e.reps}
-          </div>
-        `).join("")}
-      </div>
-    `).join("")}
+      <b>${w.name}</b>
+      ${w.exercises.map(e=>`
+        <div style="margin-top:8px;">
+          ${e.name} — ${e.sets} x ${e.reps}
+        </div>`).join("")}
+    </div>`).join("")}
   `;
 }
 
-let currentWorkout = 0;
-let currentExercise = 0;
+// ---------- TRENING ----------
+let cw=0, ce=0;
 
-function startWorkout() {
-  currentWorkout = 0;
-  currentExercise = 0;
+function startWorkout(){
+  cw=0;
+  ce=0;
   renderWorkout();
 }
 
-function renderWorkout() {
-  const w = state.plan.workouts[currentWorkout];
-  const e = w.exercises[currentExercise];
+function renderWorkout(){
+  const w = state.plan.workouts[cw];
+  const e = w.exercises[ce];
 
   app.innerHTML = `
-    <div class="card">
-      <div class="title">${w.name}</div>
-      <div style="font-size:22px;margin:10px 0;">${e.name}</div>
-      <div>${e.sets} serii x ${e.reps}</div>
-      <input placeholder="Ciężar (kg)" id="kg">
-      <button class="btn" onclick="nextExercise()">Dalej</button>
-    </div>
-  `;
+  <div class="card">
+    <div class="title">${w.name}</div>
+    <div style="font-size:28px;margin:15px 0;font-weight:800;">${e.name}</div>
+    <div>${e.sets} x ${e.reps}</div>
+
+    <input id="kg" placeholder="Ciężar (kg)">
+    <button class="btn" onclick="next()">Dalej</button>
+  </div>`;
 }
 
-function nextExercise() {
-  currentExercise++;
-  const w = state.plan.workouts[currentWorkout];
+function next(){
+  const val = document.getElementById("kg").value;
+  state.progress[`${cw}_${ce}`] = val;
+  save();
 
-  if (currentExercise >= w.exercises.length) {
-    currentWorkout++;
-    currentExercise = 0;
+  ce++;
+  if(ce >= state.plan.workouts[cw].exercises.length){
+    cw++;
+    ce=0;
   }
 
-  if (currentWorkout >= state.plan.workouts.length) {
+  if(cw >= state.plan.workouts.length){
+    alert("Trening skończony 🔥");
     renderDashboard();
     return;
   }
@@ -254,274 +284,10 @@ function nextExercise() {
   renderWorkout();
 }
 
-function init() {
-  if (!state.user) return renderAuth();
-  if (!state.plan) return renderDashboard();
-  renderPlan();
-}
-
-init();
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="pl">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>FitPlan Pro</title>
-
-<style>
-:root {
-  --bg: #111;
-  --card: #1b1b1b;
-  --border: #2a2a2a;
-  --text: #f5f5f5;
-  --sub: #888;
-  --accent: #00e0ff;
-}
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: system-ui;
-  background: var(--bg);
-  color: var(--text);
-}
-
-.container {
-  max-width: 700px;
-  margin: auto;
-  padding: 20px;
-}
-
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  transition: 0.2s;
-}
-
-.title {
-  font-size: 24px;
-  font-weight: 800;
-  margin-bottom: 10px;
-}
-
-.btn {
-  padding: 14px;
-  border-radius: 999px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  background: var(--accent);
-  color: #000;
-  width: 100%;
-  font-size: 16px;
-  margin-top: 10px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.option {
-  padding: 18px;
-  text-align: center;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.option.active {
-  border-color: var(--accent);
-  background: rgba(0,224,255,0.08);
-}
-
-.small { font-size: 13px; color: var(--sub); }
-
-input {
-  width: 100%;
-  padding: 12px;
-  background: #111;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: white;
-  margin-top: 8px;
-}
-</style>
-</head>
-
-<body>
-<div class="container" id="app"></div>
-
-<script>
-let state = JSON.parse(localStorage.getItem("fitapp")) || {
-  user: null,
-  plan: null,
-  progress: {}
-};
-
-function save() {
-  localStorage.setItem("fitapp", JSON.stringify(state));
-}
-
-function setUser(data) {
-  state.user = data;
-  save();
-  renderDashboard();
-}
-
-function selectOption(el, key, value) {
-  document.querySelectorAll(`[data-${key}]`).forEach(e => e.classList.remove("active"));
-  el.classList.add("active");
-  state[key] = value;
-}
-
-function generatePlan() {
-  const plan = {
-    name: "Plan: Góra ciała (siła + masa)",
-    workouts: [
-      {
-        name: "Push",
-        exercises: [
-          { name: "Wyciskanie sztangi", sets: 5, reps: "5" },
-          { name: "Wyciskanie hantli skos", sets: 4, reps: "10" },
-          { name: "OHP", sets: 4, reps: "8" },
-          { name: "Dipy", sets: 3, reps: "max" },
-          { name: "Triceps linka", sets: 3, reps: "12" }
-        ]
-      },
-      {
-        name: "Pull",
-        exercises: [
-          { name: "Podciąganie", sets: 4, reps: "max" },
-          { name: "Wiosłowanie sztangą", sets: 5, reps: "5" },
-          { name: "Face pull", sets: 3, reps: "15" },
-          { name: "Biceps hantle", sets: 3, reps: "12" }
-        ]
-      }
-    ]
-  };
-
-  state.plan = plan;
-  save();
-  renderPlan();
-}
-
-function renderAuth() {
-  app.innerHTML = `
-    <div class="card">
-      <div class="title">Stwórz konto</div>
-      <input id="name" placeholder="Imię">
-      <input id="weight" placeholder="Waga (kg)">
-      <button class="btn" onclick="setUser({
-        name: name.value,
-        weight: weight.value
-      })">Start</button>
-    </div>
-  `;
-}
-
-function renderDashboard() {
-  app.innerHTML = `
-    <div class="card">
-      <div class="title">Cześć ${state.user.name} 👋</div>
-      <div class="small">Twoja waga: ${state.user.weight} kg</div>
-    </div>
-
-    <div class="card">
-      <div class="title">Twój plan</div>
-      <button class="btn" onclick="renderGenerator()">Generuj plan</button>
-    </div>
-  `;
-}
-
-function renderGenerator() {
-  app.innerHTML = `
-    <div class="card">
-      <div class="title">Wybierz cel</div>
-      <div class="grid">
-        <div class="option" onclick="selectOption(this,'goal','gora')" data-goal>Góra</div>
-        <div class="option" onclick="selectOption(this,'goal','dol')" data-goal>Dół</div>
-        <div class="option" onclick="selectOption(this,'goal','masa')" data-goal>Masa</div>
-        <div class="option" onclick="selectOption(this,'goal','redukcja')" data-goal>Redukcja</div>
-      </div>
-      <button class="btn" onclick="generatePlan()">Generuj</button>
-    </div>
-  `;
-}
-
-function renderPlan() {
-  const p = state.plan;
-
-  app.innerHTML = `
-    <div class="card">
-      <div class="title">${p.name}</div>
-      <button class="btn" onclick="startWorkout()">Start trening</button>
-    </div>
-    ${p.workouts.map(w => `
-      <div class="card">
-        <b>${w.name}</b>
-        ${w.exercises.map(e => `
-          <div style="margin-top:8px;">
-            ${e.name} — ${e.sets} x ${e.reps}
-          </div>
-        `).join("")}
-      </div>
-    `).join("")}
-  `;
-}
-
-let currentWorkout = 0;
-let currentExercise = 0;
-
-function startWorkout() {
-  currentWorkout = 0;
-  currentExercise = 0;
-  renderWorkout();
-}
-
-function renderWorkout() {
-  const w = state.plan.workouts[currentWorkout];
-  const e = w.exercises[currentExercise];
-
-  app.innerHTML = `
-    <div class="card">
-      <div class="title">${w.name}</div>
-      <div style="font-size:22px;margin:10px 0;">${e.name}</div>
-      <div>${e.sets} serii x ${e.reps}</div>
-      <input placeholder="Ciężar (kg)" id="kg">
-      <button class="btn" onclick="nextExercise()">Dalej</button>
-    </div>
-  `;
-}
-
-function nextExercise() {
-  currentExercise++;
-  const w = state.plan.workouts[currentWorkout];
-
-  if (currentExercise >= w.exercises.length) {
-    currentWorkout++;
-    currentExercise = 0;
-  }
-
-  if (currentWorkout >= state.plan.workouts.length) {
-    renderDashboard();
-    return;
-  }
-
-  renderWorkout();
-}
-
-function init() {
-  if (!state.user) return renderAuth();
-  if (!state.plan) return renderDashboard();
+// ---------- INIT ----------
+function init(){
+  if(!state.user) return renderAuth();
+  if(!state.plan) return renderDashboard();
   renderPlan();
 }
 

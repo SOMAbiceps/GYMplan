@@ -3,249 +3,253 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>FitPlan 6.0</title>
+<title>Gym Planner Pro</title>
 
 <style>
-body{
-margin:0;
-font-family:system-ui;
-background:#1f1f1f;
-color:#fff;
+body {
+    margin:0;
+    font-family: system-ui;
+    background:#e5e5e5;
+    color:#111;
 }
 
-/* CENTER */
-.center{
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-min-height:100vh;
-padding:20px;
+/* LOGIN */
+#login {
+    display:flex;
+    height:100vh;
+    justify-content:center;
+    align-items:center;
 }
 
-/* CARD */
-.card{
-background:#2a2a2a;
-padding:20px;
-border-radius:18px;
-width:100%;
-max-width:420px;
-margin-bottom:15px;
+.box {
+    background:white;
+    padding:30px;
+    border-radius:20px;
+    width:300px;
+    text-align:center;
 }
 
-/* BUTTON */
-.btn{
-background:#00ff88;
-border:none;
-padding:14px;
-border-radius:12px;
-font-weight:700;
-cursor:pointer;
-width:100%;
-margin-top:10px;
+input {
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+    border-radius:10px;
+    border:1px solid #ccc;
 }
 
-/* OPTION */
-.option{
-background:#333;
-padding:14px;
-border-radius:12px;
-margin-bottom:10px;
-text-align:center;
-cursor:pointer;
+button {
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    background:#ff3b3b;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
 }
 
-.option:hover{
-background:#00ff88;
-color:#000;
+/* APP */
+#app {
+    display:none;
 }
 
-/* EXERCISE */
-.exercise{
-background:#262626;
-padding:12px;
-border-radius:12px;
-margin-top:10px;
+header {
+    display:flex;
+    justify-content:space-between;
+    padding:15px;
+    background:white;
 }
 
-/* SET */
-.set{
-background:#333;
-padding:8px;
-border-radius:8px;
-margin-top:6px;
-text-align:center;
-cursor:pointer;
+.sidebar {
+    position:fixed;
+    left:0;
+    top:0;
+    width:200px;
+    height:100%;
+    background:white;
+    padding:20px;
 }
 
-.done{
-background:#00ff88;
-color:#000;
+.main {
+    margin-left:220px;
+    padding:20px;
 }
 
-/* TIMER */
-.timerBox{
-font-size:50px;
-text-align:center;
-margin-top:10px;
+/* KAFELKI */
+.grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
 }
 
+.card {
+    background:white;
+    padding:15px;
+    border-radius:15px;
+}
+
+.exercise {
+    margin-bottom:20px;
+}
+
+.timer {
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    background:#111;
+    color:white;
+    padding:20px;
+    border-radius:50%;
+    font-size:20px;
+}
+
+.hidden {
+    display:none;
+}
+
+@media(max-width:768px){
+    .sidebar {
+        position:static;
+        width:100%;
+        height:auto;
+    }
+    .main {
+        margin:0;
+    }
+    .grid {
+        grid-template-columns:1fr;
+    }
+}
 </style>
 </head>
 
 <body>
 
-<div id="app"></div>
+<!-- LOGIN -->
+<div id="login">
+    <div class="box">
+        <h2>Login</h2>
+        <input id="user" placeholder="Login">
+        <input id="pass" type="password" placeholder="Hasło">
+        <button onclick="login()">Zaloguj</button>
+    </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<header>
+    <h3 id="welcome"></h3>
+    <button onclick="logout()">Wyloguj</button>
+</header>
+
+<div class="sidebar">
+    <h4>Plany</h4>
+    <button onclick="loadPlan('push')">Push</button>
+    <button onclick="loadPlan('pull')">Pull</button>
+    <button onclick="loadPlan('legs')">Legs</button>
+    <button onclick="loadPlan('upper')">Upper</button>
+    <button onclick="loadPlan('lower')">Lower</button>
+</div>
+
+<div class="main">
+    <div id="plan"></div>
+</div>
+</div>
+
+<div id="timer" class="timer hidden">60</div>
 
 <script>
 
-// ===== USERS =====
-let users = JSON.parse(localStorage.getItem("users") || "[]");
 let currentUser = null;
+let timerInterval;
 
-// ===== START =====
-function start(){
-renderUsers();
+/* LOGIN */
+function login(){
+    const u = user.value;
+    const p = pass.value;
+
+    if(!u || !p) return alert("Wpisz dane");
+
+    let users = JSON.parse(localStorage.getItem("users")||"{}");
+
+    if(!users[u]) users[u] = p;
+
+    if(users[u] !== p) return alert("Złe hasło");
+
+    localStorage.setItem("users", JSON.stringify(users));
+
+    currentUser = u;
+    welcome.innerText = "Cześć " + u;
+
+    loginDiv(false);
 }
 
-// ===== USERS LIST =====
-function renderUsers(){
-app.innerHTML = `<div class="center">
-<h1>FitPlan</h1>
-<div class="card">
-<h3>Konta</h3>
-${users.map(u=>`<div class="option" onclick="login('${u.name}')">${u.name}</div>`).join("")}
-<input id="newUser" placeholder="Nowe konto">
-<button class="btn" onclick="createUser()">Dodaj konto</button>
-</div>
-</div>`;
+function logout(){
+    currentUser=null;
+    loginDiv(true);
 }
 
-// ===== CREATE USER =====
-function createUser(){
-let name = document.getElementById("newUser").value;
-if(!name) return;
-
-users.push({name});
-localStorage.setItem("users", JSON.stringify(users));
-renderUsers();
+function loginDiv(show){
+    login.style.display = show ? "flex":"none";
+    app.style.display = show ? "none":"block";
 }
 
-// ===== LOGIN =====
-function login(name){
-currentUser = {name};
-profileSetup();
-}
-
-// ===== PROFILE SETUP =====
-function profileSetup(){
-app.innerHTML = `
-<div class="center">
-<div class="card">
-<h2>Dane</h2>
-
-<div class="option" onclick="setData('plec','kobieta')">Kobieta</div>
-<div class="option" onclick="setData('plec','mezczyzna')">Mężczyzna</div>
-
-<div class="option" onclick="setData('cel','masa')">Masa</div>
-<div class="option" onclick="setData('cel','redukcja')">Redukcja</div>
-
-<div class="option" onclick="setData('poziom','poczatkujacy')">Początkujący</div>
-<div class="option" onclick="setData('poziom','sredni')">Średni</div>
-
-<button class="btn" onclick="generatePlan()">Generuj plan</button>
-</div>
-</div>`;
-}
-
-// ===== DATA =====
-let data = {};
-function setData(key,val){
-data[key]=val;
-}
-
-// ===== PLAN GENERATOR =====
-let plan;
-
-function generatePlan(){
-
-if(data.cel==="masa"){
-plan={
-"Push":[["Wyciskanie sztangi",4,"6-10"],["Dipy",3,"max"]],
-"Pull":[["Podciąganie",4,"max"],["Wiosłowanie",4,"8-10"]],
-"Legs":[["Przysiad",5,"5"],["RDL",4,"10"]]
+/* PLAN */
+const plans = {
+push:[
+"Bench Press","Incline Dumbbell Press","Shoulder Press","Lateral Raise","Triceps Pushdown"
+],
+pull:[
+"Pull Ups","Barbell Row","Lat Pulldown","Face Pull","Biceps Curl"
+],
+legs:[
+"Squat","Leg Press","Romanian Deadlift","Leg Curl","Calf Raise"
+],
+upper:[
+"Bench Press","Row","Shoulder Press","Pull Ups","Curls","Triceps"
+],
+lower:[
+"Squat","Deadlift","Leg Curl","Leg Extension","Calf Raise"
+]
 };
-}else{
-plan={
-"Full Body":[["Przysiad",4,"12"],["Pompki",4,"max"],["Plank",3,"30s"]]
-};
+
+function loadPlan(type){
+    const planDiv = document.getElementById("plan");
+    planDiv.innerHTML = "";
+
+    plans[type].forEach(ex=>{
+        const el = document.createElement("div");
+        el.className="card";
+
+        el.innerHTML = `
+        <div class="exercise">
+            <h4>${ex}</h4>
+            <input placeholder="kg">
+            <input placeholder="powtórzenia">
+            <button onclick="startTimer()">Start</button>
+        </div>
+        `;
+
+        planDiv.appendChild(el);
+    });
 }
 
-chooseWorkout();
-}
-
-// ===== CHOOSE WORKOUT =====
-function chooseWorkout(){
-app.innerHTML=`<div class="center">
-<h2>Wybierz trening</h2>
-${Object.keys(plan).map(d=>`<div class="option" onclick="showWorkout('${d}')">${d}</div>`).join("")}
-</div>`;
-}
-
-// ===== SHOW WORKOUT =====
-function showWorkout(day){
-app.innerHTML=`<div class="center">
-<div class="card">
-<h2>${day}</h2>
-
-${plan[day].map((ex,i)=>`
-<div class="exercise">
-<strong>${ex[0]}</strong><br>
-${ex[1]} serie × ${ex[2]}
-<br>
-KG: <input>
-<div id="sets${i}"></div>
-</div>`).join("")}
-
-<div class="timerBox" id="timer">60</div>
-<button class="btn" onclick="startTimer()">Start timer</button>
-
-</div>
-</div>`;
-
-plan[day].forEach((ex,i)=>{
-let container=document.getElementById("sets"+i);
-for(let j=0;j<ex[1];j++){
-let s=document.createElement("div");
-s.className="set";
-s.innerText="Seria "+(j+1);
-s.onclick=()=>s.classList.toggle("done");
-container.appendChild(s);
-}
-});
-}
-
-// ===== TIMER =====
+/* TIMER */
 function startTimer(){
-let t=60;
-let el=document.getElementById("timer");
+    let time = 60;
+    timer.classList.remove("hidden");
+    timer.innerText = time;
 
-let i=setInterval(()=>{
-t--;
-el.innerText=t;
+    clearInterval(timerInterval);
 
-if(t<10) el.style.color="red";
-
-if(t<=0){
-clearInterval(i);
-el.innerText="✔";
+    timerInterval = setInterval(()=>{
+        time--;
+        timer.innerText = time;
+        if(time<=0){
+            clearInterval(timerInterval);
+            timer.classList.add("hidden");
+        }
+    },1000);
 }
-},1000);
-}
-
-// ===== INIT =====
-start();
 
 </script>
 

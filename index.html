@@ -3,14 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gym Planner Pro</title>
+<title>Gym Planner Elite</title>
 
 <style>
-* { box-sizing: border-box; }
-
 body {
   margin:0;
-  font-family: system-ui;
+  font-family:system-ui;
   background:#18181a;
   color:white;
   display:flex;
@@ -18,29 +16,20 @@ body {
 
 /* SIDEBAR */
 .sidebar {
-  width:260px;
+  width:250px;
   background:#202024;
-  height:100vh;
   padding:20px;
-  display:flex;
-  flex-direction:column;
-  gap:15px;
-}
-
-.logo {
-  font-size:22px;
-  font-weight:bold;
 }
 
 .nav button {
   width:100%;
+  margin-bottom:10px;
   padding:12px;
   border:none;
   border-radius:10px;
   background:#2c2c2e;
   color:white;
   cursor:pointer;
-  text-align:left;
 }
 
 .nav button:hover {
@@ -51,11 +40,9 @@ body {
 /* MAIN */
 .main {
   flex:1;
-  padding:30px;
-  overflow:auto;
+  padding:25px;
 }
 
-/* CARDS */
 .card {
   background:#202024;
   padding:20px;
@@ -75,7 +62,6 @@ body {
   gap:15px;
 }
 
-/* EXERCISE TILE */
 .exercise {
   background:#2c2c2e;
   padding:15px;
@@ -83,8 +69,9 @@ body {
   transition:0.2s;
 }
 
-.exercise:hover {
-  transform:scale(1.03);
+.done {
+  background:#4ade80;
+  color:black;
 }
 
 input {
@@ -97,7 +84,6 @@ input {
   color:white;
 }
 
-/* BUTTON */
 .btn {
   margin-top:10px;
   padding:12px;
@@ -110,21 +96,30 @@ input {
 }
 
 /* TIMER */
-.timer {
-  width:120px;
-  height:120px;
+.timerBox {
+  text-align:center;
+}
+
+.timerCircle {
+  width:130px;
+  height:130px;
   border-radius:50%;
   border:6px solid #4ade80;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:26px;
-  margin:auto;
-  margin-top:15px;
+  font-size:28px;
+  margin:15px auto;
 }
 
-.center {
-  text-align:center;
+.timerControls button {
+  margin:5px;
+  padding:10px 12px;
+  border:none;
+  border-radius:8px;
+  background:#3a3a3c;
+  color:white;
+  cursor:pointer;
 }
 
 </style>
@@ -132,61 +127,45 @@ input {
 
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
-<div class="logo">Gym Planner</div>
-
+<h2>Gym</h2>
 <div class="nav">
-<button onclick="showPage('home')">Start</button>
-<button onclick="showPage('plans')">Plany</button>
-<button onclick="showPage('account')">Konto</button>
+<button onclick="show('home')">Start</button>
+<button onclick="show('plans')">Plany</button>
+<button onclick="show('account')">Konto</button>
+</div>
 </div>
 
-</div>
-
-<!-- MAIN -->
 <div class="main">
 
-<!-- LOGIN -->
-<div id="loginPage" class="card center">
+<div id="login" class="card">
 <h2>Logowanie</h2>
 <input id="username" placeholder="Nazwa">
 <button class="btn" onclick="login()">Wejdź</button>
 </div>
 
-<!-- HOME -->
-<div id="homePage" style="display:none;">
-<div class="card">
+<div id="home" style="display:none;" class="card">
 <h2 id="welcome"></h2>
-<p>Wybierz trening i zacznij.</p>
-</div>
 </div>
 
-<!-- PLANS -->
-<div id="plansPage" style="display:none;">
+<div id="plans" style="display:none;">
 <div class="card">
 <h2>Wybierz trening</h2>
-
 <div class="grid">
-<button class="btn" onclick="startWorkout('push')">Push</button>
-<button class="btn" onclick="startWorkout('pull')">Pull</button>
-<button class="btn" onclick="startWorkout('legs')">Legs</button>
-<button class="btn" onclick="startWorkout('upper')">Upper</button>
-<button class="btn" onclick="startWorkout('lower')">Lower</button>
+<button class="btn" onclick="start('push')">Push</button>
+<button class="btn" onclick="start('pull')">Pull</button>
+<button class="btn" onclick="start('legs')">Legs</button>
+<button class="btn" onclick="start('upper')">Upper</button>
+<button class="btn" onclick="start('lower')">Lower</button>
+</div>
 </div>
 
-</div>
-
-<div id="workoutContainer"></div>
+<div id="workout"></div>
 
 </div>
 
-<!-- ACCOUNT -->
-<div id="accountPage" style="display:none;">
-<div class="card">
-<h2>Konto</h2>
+<div id="account" style="display:none;" class="card">
 <button class="btn" onclick="logout()">Wyloguj</button>
-</div>
 </div>
 
 </div>
@@ -195,22 +174,19 @@ input {
 
 let user = localStorage.getItem("user");
 
-const pages = ["home","plans","account"];
-
-function showPage(page){
-  pages.forEach(p=>{
-    document.getElementById(p+"Page").style.display="none";
+function show(page){
+  ["home","plans","account"].forEach(p=>{
+    document.getElementById(p).style.display="none";
   });
-  document.getElementById(page+"Page").style.display="block";
+  document.getElementById(page).style.display="block";
 }
 
 function login(){
   let name = document.getElementById("username").value;
   if(!name) return;
-
-  localStorage.setItem("user", name);
-  user = name;
-  initApp();
+  localStorage.setItem("user",name);
+  user=name;
+  init();
 }
 
 function logout(){
@@ -218,105 +194,120 @@ function logout(){
   location.reload();
 }
 
-function initApp(){
-  document.getElementById("loginPage").style.display="none";
-  showPage("home");
-  document.getElementById("welcome").innerText = "Cześć " + user;
+function init(){
+  document.getElementById("login").style.display="none";
+  show("home");
+  document.getElementById("welcome").innerText="Cześć " + user;
 }
 
-if(user) initApp();
+if(user) init();
 
 /* PLANY */
-const plans = {
-push:[
-["Bench Press",4,8],
-["Incline DB",4,10],
-["Shoulder Press",4,8],
-["Lateral Raise",4,12],
-["Triceps",4,12]
-],
-pull:[
-["Pull Up",4,8],
-["Row",4,8],
-["Lat Pulldown",4,10],
-["Face Pull",4,12],
-["Biceps",4,10]
-],
-legs:[
-["Squat",4,8],
-["Leg Press",4,10],
-["RDL",4,8],
-["Curl",4,12],
-["Calves",5,15]
-],
-upper:[
-["Bench",4,8],
-["Pull Up",4,8],
-["Shoulder",4,8],
-["Row",4,10]
-],
-lower:[
-["Squat",4,8],
-["RDL",4,8],
-["Press",4,10],
-["Curl",4,12]
-]
+const plans={
+push:[["Bench",4,8],["Incline",4,10],["Shoulder",4,8],["Lateral",4,12],["Triceps",4,12]],
+pull:[["Pull Up",4,8],["Row",4,8],["Lat",4,10],["Face Pull",4,12],["Biceps",4,10]],
+legs:[["Squat",4,8],["Press",4,10],["RDL",4,8],["Curl",4,12],["Calves",5,15]],
+upper:[["Bench",4,8],["Pull",4,8],["Shoulder",4,8],["Row",4,10]],
+lower:[["Squat",4,8],["RDL",4,8],["Press",4,10],["Curl",4,12]]
 };
 
-function startWorkout(type){
+function start(type){
 
-  let container = document.getElementById("workoutContainer");
+  let container=document.getElementById("workout");
   container.innerHTML="";
 
-  let div = document.createElement("div");
-  div.className="card";
+  let saved=JSON.parse(localStorage.getItem("progress")||"{}");
 
-  let html = `<h2>${type.toUpperCase()}</h2><div class="grid">`;
+  let html=`<div class="card"><h2>${type.toUpperCase()}</h2><div class="grid">`;
 
   plans[type].forEach((ex,i)=>{
-    html += `
-    <div class="exercise">
+
+    let doneClass = saved?.[type]?.[i]?.done ? "done":"";
+
+    html+=`
+    <div class="exercise ${doneClass}" onclick="toggleDone(this,'${type}',${i})">
       <strong>${ex[0]}</strong><br>
       ${ex[1]}x${ex[2]}
-      <input placeholder="kg" onchange="save('${type}',${i},this.value,'kg')">
-      <input placeholder="powt." onchange="save('${type}',${i},this.value,'reps')">
+      <input placeholder="kg" value="${saved?.[type]?.[i]?.kg||""}" 
+      onchange="save('${type}',${i},this.value,'kg')">
+      <input placeholder="powt." value="${saved?.[type]?.[i]?.reps||""}" 
+      onchange="save('${type}',${i},this.value,'reps')">
     </div>`;
   });
 
-  html += `</div>
-  <div class="timer" id="timer">60</div>
-  <button class="btn" onclick="startTimer()">Start odpoczynku</button>
-  `;
+  html+=`</div>
 
-  div.innerHTML = html;
-  container.appendChild(div);
+  <div class="timerBox">
+    <div class="timerCircle" id="timer">60</div>
+
+    <div class="timerControls">
+      <button onclick="startTimer()">Start</button>
+      <button onclick="pauseTimer()">Pause</button>
+      <button onclick="addTime(10)">+10s</button>
+      <button onclick="addTime(30)">+30s</button>
+      <button onclick="resetTimer()">Reset</button>
+    </div>
+  </div>
+
+  </div>`;
+
+  container.innerHTML=html;
 }
 
 /* TIMER */
-let time=60, interval;
+let time=60, interval=null;
+
+function updateTimer(){
+  document.getElementById("timer").innerText=time;
+}
 
 function startTimer(){
-  clearInterval(interval);
-  time=60;
-
+  if(interval) return;
   interval=setInterval(()=>{
     time--;
-    document.getElementById("timer").innerText=time;
-
+    updateTimer();
     if(time<=0){
       clearInterval(interval);
+      interval=null;
     }
   },1000);
 }
 
+function pauseTimer(){
+  clearInterval(interval);
+  interval=null;
+}
+
+function addTime(sec){
+  time+=sec;
+  updateTimer();
+}
+
+function resetTimer(){
+  time=60;
+  updateTimer();
+  clearInterval(interval);
+  interval=null;
+}
+
 /* SAVE */
-function save(type,index,value,key){
-  let data = JSON.parse(localStorage.getItem("progress")||"{}");
-
+function save(type,i,val,key){
+  let data=JSON.parse(localStorage.getItem("progress")||"{}");
   if(!data[type]) data[type]={};
-  if(!data[type][index]) data[type][index]={};
+  if(!data[type][i]) data[type][i]={};
+  data[type][i][key]=val;
+  localStorage.setItem("progress",JSON.stringify(data));
+}
 
-  data[type][index][key]=value;
+/* DONE */
+function toggleDone(el,type,i){
+  el.classList.toggle("done");
+
+  let data=JSON.parse(localStorage.getItem("progress")||"{}");
+  if(!data[type]) data[type]={};
+  if(!data[type][i]) data[type][i]={};
+
+  data[type][i].done = !data[type][i].done;
 
   localStorage.setItem("progress",JSON.stringify(data));
 }

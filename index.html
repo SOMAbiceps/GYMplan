@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FitPlan 3.1</title>
+<title>FitPlan 4.0</title>
 
 <style>
 body{
@@ -13,44 +13,33 @@ body{
   color:#fff;
 }
 
-/* LAYOUT */
-.app{
-  display:flex;
-}
+.app{display:flex}
 
 /* SIDEBAR */
 .sidebar{
   width:260px;
   background:#181818;
-  height:100vh;
   padding:20px;
+  height:100vh;
   box-sizing:border-box;
 }
 
-.sidebar h2{
-  margin:0 0 20px;
-}
-
 .plan-item{
+  background:#2a2a2a;
   padding:12px;
-  background:#222;
   border-radius:10px;
   margin-bottom:10px;
   cursor:pointer;
 }
 
 /* MAIN */
-.main{
-  flex:1;
-  padding:20px;
-}
+.main{flex:1;padding:20px}
 
 /* BUTTON */
 .btn{
-  padding:14px;
   background:#00ff88;
-  color:#000;
   border:none;
+  padding:14px;
   border-radius:10px;
   font-weight:700;
   cursor:pointer;
@@ -61,27 +50,22 @@ body{
 .card{
   background:#2a2a2a;
   padding:20px;
-  border-radius:16px;
+  border-radius:14px;
   margin-bottom:15px;
 }
 
-/* TRAINING SELECT */
-.training-select{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-
-.training-btn{
+/* SPLIT */
+.split-btn{
   background:#333;
-  padding:18px;
-  border-radius:14px;
-  text-align:center;
+  padding:16px;
+  border-radius:12px;
+  margin-bottom:10px;
   cursor:pointer;
   font-weight:700;
+  text-align:center;
 }
 
-.training-btn:hover{
+.split-btn:hover{
   background:#00ff88;
   color:#000;
 }
@@ -91,13 +75,22 @@ body{
   background:#262626;
   padding:14px;
   border-radius:12px;
-  margin-bottom:10px;
+  margin-top:10px;
+}
+
+input{
+  width:70px;
+  padding:6px;
+  border-radius:6px;
+  border:none;
+  margin-left:10px;
 }
 
 .timer{
-  margin-top:10px;
-  font-size:14px;
+  margin-top:8px;
   color:#00ff88;
+  cursor:pointer;
+  font-size:14px;
 }
 
 </style>
@@ -107,162 +100,180 @@ body{
 
 <div class="app">
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <h2>📁 Twoje plany</h2>
-    <div id="savedPlans"></div>
-    <button class="btn" onclick="newPlan()">+ Nowy plan</button>
-  </div>
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h3>📁 Plany</h3>
+  <div id="saved"></div>
+  <button class="btn" onclick="reset()">+ Nowy</button>
+</div>
 
-  <!-- MAIN -->
-  <div class="main">
+<!-- MAIN -->
+<div class="main">
 
-    <!-- START -->
-    <div id="start">
-      <h1>FitPlan</h1>
-      <p>Stwórz plan treningowy</p>
-      <button class="btn" onclick="generatePlan()">START</button>
-    </div>
+<div id="start">
+  <h1>FitPlan</h1>
+  <p>Wybierz split</p>
 
-    <!-- SELECT DAY -->
-    <div id="selectDay" style="display:none;">
-      <h2>Co dziś robisz?</h2>
-      <div class="training-select" id="trainingButtons"></div>
-    </div>
+  <div class="split-btn" onclick="generate('ppl')">Push / Pull / Legs</div>
+  <div class="split-btn" onclick="generate('ul')">Upper / Lower</div>
+</div>
 
-    <!-- TRAINING VIEW -->
-    <div id="trainingView"></div>
+<div id="plan"></div>
 
-  </div>
+</div>
 </div>
 
 <script>
 
-let currentPlan = null;
+let currentPlan=null;
 
-// GENERATE PLAN
-function generatePlan(){
+// GENERATE
+function generate(type){
 
-  currentPlan = {
-    name:"Plan PUSH/PULL/LEGS",
-    trainings:{
-      push:[
-        {name:"Wyciskanie sztangi", sets:4, reps:"6-10"},
-        {name:"Wyciskanie hantli", sets:4, reps:"8-12"},
-        {name:"Dipy", sets:3, reps:"max"},
-        {name:"Unoszenie bokiem", sets:4, reps:"12-15"},
-        {name:"Triceps linka", sets:3, reps:"12-15"}
-      ],
-      pull:[
-        {name:"Podciąganie", sets:4, reps:"max"},
-        {name:"Wiosłowanie sztangą", sets:4, reps:"8-10"},
-        {name:"Ściąganie drążka", sets:3, reps:"10-12"},
-        {name:"Face pull", sets:3, reps:"15"},
-        {name:"Biceps hantle", sets:3, reps:"10-12"}
-      ],
-      legs:[
-        {name:"Przysiad", sets:5, reps:"5"},
-        {name:"Leg press", sets:4, reps:"10"},
-        {name:"Martwy RDL", sets:4, reps:"10"},
-        {name:"Łydki", sets:4, reps:"15"},
-        {name:"Hip thrust", sets:4, reps:"12"}
-      ]
-    }
-  };
-
-  document.getElementById("start").style.display="none";
-  document.getElementById("selectDay").style.display="block";
-
-  renderTrainingButtons();
-  savePlan();
+if(type==="ppl"){
+currentPlan={
+name:"PPL",
+trainings:{
+Push:[
+["Wyciskanie sztangi",4,"6-10"],
+["Wyciskanie hantli",4,"8-12"],
+["Dipy",3,"max"],
+["Barki bokiem",4,"12-15"],
+["Triceps linka",3,"12-15"]
+],
+Pull:[
+["Podciąganie",4,"max"],
+["Wiosłowanie",4,"8-10"],
+["Ściąganie drążka",3,"10-12"],
+["Face pull",3,"15"],
+["Biceps hantle",3,"10-12"]
+],
+Legs:[
+["Przysiad",5,"5"],
+["Leg press",4,"10"],
+["RDL",4,"10"],
+["Łydki",4,"15"],
+["Hip thrust",4,"12"]
+]
+}
+};
 }
 
-// BUTTONS
-function renderTrainingButtons(){
-  const container = document.getElementById("trainingButtons");
-  container.innerHTML="";
-
-  Object.keys(currentPlan.trainings).forEach(type=>{
-    const btn = document.createElement("div");
-    btn.className="training-btn";
-    btn.innerText=type.toUpperCase();
-    btn.onclick=()=>showTraining(type);
-    container.appendChild(btn);
-  });
+if(type==="ul"){
+currentPlan={
+name:"Upper/Lower",
+trainings:{
+Upper:[
+["Wyciskanie sztangi",4,"6-10"],
+["Podciąganie",4,"max"],
+["Wiosłowanie",3,"10"],
+["Barki bokiem",3,"15"],
+["Biceps",3,"12"],
+["Triceps",3,"12"]
+],
+Lower:[
+["Przysiad",5,"5"],
+["RDL",4,"10"],
+["Leg press",4,"10"],
+["Łydki",4,"15"],
+["Hip thrust",4,"12"]
+]
+}
+};
 }
 
-// SHOW TRAINING
-function showTraining(type){
+renderPlan();
+save();
+}
 
-  const view = document.getElementById("trainingView");
-  view.innerHTML = `<h2>${type.toUpperCase()}</h2>`;
+// RENDER
+function renderPlan(){
+const planDiv=document.getElementById("plan");
+planDiv.innerHTML="";
 
-  currentPlan.trainings[type].forEach(ex=>{
-    const div = document.createElement("div");
-    div.className="exercise";
+Object.keys(currentPlan.trainings).forEach(day=>{
+const card=document.createElement("div");
+card.className="card";
 
-    div.innerHTML = `
-      <strong>${ex.name}</strong><br>
-      ${ex.sets} serie × ${ex.reps}
-      <div class="timer" onclick="startTimer(this)">⏱ Start timer</div>
-    `;
+card.innerHTML=`<h2>${day}</h2>`;
 
-    view.appendChild(div);
-  });
+currentPlan.trainings[day].forEach((ex,i)=>{
+const div=document.createElement("div");
+div.className="exercise";
+
+const key=day+i;
+const saved=localStorage.getItem(key)||"";
+
+div.innerHTML=`
+<strong>${ex[0]}</strong><br>
+${ex[1]} serie × ${ex[2]}
+<br><br>
+KG: <input value="${saved}" oninput="saveWeight('${key}',this.value)">
+<div class="timer" onclick="timer(this)">⏱ start</div>
+`;
+
+card.appendChild(div);
+});
+
+planDiv.appendChild(card);
+});
+
+document.getElementById("start").style.display="none";
 }
 
 // TIMER
-function startTimer(el){
-  let time = 60;
-  el.innerText = "60s";
+function timer(el){
+let t=60;
+el.innerText=t+"s";
 
-  const interval = setInterval(()=>{
-    time--;
-    el.innerText = time+"s";
-    if(time<=0){
-      clearInterval(interval);
-      el.innerText="✔ Gotowe";
-    }
-  },1000);
+const i=setInterval(()=>{
+t--;
+el.innerText=t+"s";
+if(t<=0){
+clearInterval(i);
+el.innerText="✔";
+}
+},1000);
 }
 
-// SAVE
-function savePlan(){
-  let plans = JSON.parse(localStorage.getItem("plans") || "[]");
-  plans.push(currentPlan);
-  localStorage.setItem("plans", JSON.stringify(plans));
-  renderSaved();
+// SAVE KG
+function saveWeight(key,val){
+localStorage.setItem(key,val);
 }
 
-// LOAD
+// SAVE PLAN
+function save(){
+let arr=JSON.parse(localStorage.getItem("plans")||"[]");
+arr.push(currentPlan);
+localStorage.setItem("plans",JSON.stringify(arr));
+renderSaved();
+}
+
+// SIDEBAR
 function renderSaved(){
-  const container = document.getElementById("savedPlans");
-  container.innerHTML="";
+const el=document.getElementById("saved");
+el.innerHTML="";
 
-  let plans = JSON.parse(localStorage.getItem("plans") || "[]");
+let arr=JSON.parse(localStorage.getItem("plans")||"[]");
 
-  plans.forEach((p,i)=>{
-    const div = document.createElement("div");
-    div.className="plan-item";
-    div.innerText = p.name;
-    div.onclick=()=>{
-      currentPlan=p;
-      document.getElementById("start").style.display="none";
-      document.getElementById("selectDay").style.display="block";
-      renderTrainingButtons();
-    };
-    container.appendChild(div);
-  });
+arr.forEach(p=>{
+const div=document.createElement("div");
+div.className="plan-item";
+div.innerText=p.name;
+div.onclick=()=>{
+currentPlan=p;
+renderPlan();
+};
+el.appendChild(div);
+});
 }
 
-// NEW PLAN
-function newPlan(){
-  document.getElementById("start").style.display="block";
-  document.getElementById("selectDay").style.display="none";
-  document.getElementById("trainingView").innerHTML="";
+// RESET
+function reset(){
+document.getElementById("start").style.display="block";
+document.getElementById("plan").innerHTML="";
 }
 
-// INIT
 renderSaved();
 
 </script>

@@ -7,225 +7,231 @@
 
 <style>
 body {
-  margin: 0;
+  margin:0;
   font-family: system-ui;
-  background: #0d0d0d;
-  color: #f0f0f0;
+  background:#0d0d0d;
+  color:#fff;
 }
+
 .wrap {
-  max-width: 600px;
-  margin: auto;
-  padding: 30px 16px 80px;
+  max-width:600px;
+  margin:auto;
+  padding:30px 16px 80px;
 }
+
+h1 {
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
 .card {
-  background: #161616;
-  border: 1.5px solid #2a2a2a;
-  border-radius: 14px;
-  padding: 14px;
-  text-align: center;
-  cursor: pointer;
+  background:#161616;
+  border:1.5px solid #2a2a2a;
+  border-radius:14px;
+  padding:18px;
+  text-align:center;
+  cursor:pointer;
+  transition:0.2s;
 }
+
+.card:hover {
+  border-color:#c8f045;
+}
+
 .card.active {
-  border-color: #c8f045;
-  background: rgba(200,240,69,0.07);
+  border-color:#c8f045;
+  background:rgba(200,240,69,0.08);
 }
+
 .btn {
-  padding: 12px 22px;
-  border-radius: 99px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
+  padding:12px 20px;
+  border-radius:999px;
+  font-weight:700;
+  border:none;
+  cursor:pointer;
+  margin-top:20px;
 }
-.primary { background: #c8f045; color: #000; }
-.secondary { background: transparent; color: #666; border: 1px solid #2a2a2a; }
+
+.primary { background:#c8f045; color:#000; }
+.secondary { background:#1e1e1e; color:#aaa; }
 
 .progress {
-  height: 3px;
-  background: #1e1e1e;
-  border-radius: 99px;
-  overflow: hidden;
-  margin-bottom: 20px;
+  height:4px;
+  background:#1e1e1e;
+  border-radius:999px;
+  overflow:hidden;
+  margin-bottom:20px;
 }
-.progress-bar {
-  height: 100%;
-  background: #c8f045;
-  width: 0%;
-  transition: 0.3s;
+
+.bar {
+  height:100%;
+  background:#c8f045;
+  width:0%;
+  transition:0.3s;
+}
+
+input {
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #2a2a2a;
+  background:#161616;
+  color:#fff;
+  margin-bottom:10px;
 }
 </style>
 </head>
 
 <body>
 <div class="wrap">
-
 <h1>FitPlan AI</h1>
 
-<div class="progress">
-  <div class="progress-bar" id="bar"></div>
-</div>
-
+<div class="progress"><div class="bar" id="bar"></div></div>
 <div id="app"></div>
 
 </div>
 
 <script>
 const state = {
-  step: 1,
+  step: 0,
   answers: {},
-  plan: null,
-  loading: false
+  user: null
 };
 
-const GOALS = {
-  kobieta: [
-    { value: "posladki", label: "🍑 Pośladki" },
-    { value: "brzuch", label: "⚡ Brzuch" }
-  ],
-  mezczyzna: [
-    { value: "klatka", label: "🦁 Klatka" },
-    { value: "plecy", label: "💪 Plecy" }
-  ]
-};
-
-const PLANS = {
-  kobieta_posladki: {
-    opis: "Plan na pośladki 🔥",
-    trening: ["Hip thrust 4x12", "RDL 4x10", "Wykroki 3x10"]
-  },
-  mezczyzna_klatka: {
-    opis: "Plan na klatkę 💪",
-    trening: ["Bench press 5x5", "Incline DB 4x10", "Dipy 3x10"]
-  }
-};
-
-function save() {
-  localStorage.setItem("fitplan", JSON.stringify(state.plan));
+// ─── LOGIN ───
+function renderLogin() {
+  app.innerHTML = `
+    <h2>Twoje konto</h2>
+    <input id="name" placeholder="Imię">
+    <button class="btn primary" onclick="login()">Start</button>
+  `;
 }
 
-function load() {
-  const saved = localStorage.getItem("fitplan");
-  if (saved) {
-    state.plan = JSON.parse(saved);
-    render();
-  }
-}
+function login() {
+  const name = document.getElementById("name").value;
+  if (!name) return alert("Podaj imię");
 
-function select(key, value) {
-  state.answers[key] = value;
+  state.user = { name };
+  localStorage.setItem("user", JSON.stringify(state.user));
+  state.step = 1;
   render();
 }
 
-function next() {
-  state.step++;
+// ─── SELECT ───
+function select(step, value) {
+  state.answers[step] = value;
   render();
 }
 
-function back() {
-  state.step--;
-  render();
-}
-
+// ─── GENERATE ───
 function generate() {
-  state.loading = true;
-  render();
+  const {1:plec, 2:cel, 6:waga} = state.answers;
 
-  setTimeout(() => {
-    const key = state.answers[1] + "_" + state.answers[2];
-    state.plan = PLANS[key];
-    state.loading = false;
-    save();
-    render();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, 500);
+  const kcal = Math.round(waga * 30);
+
+  app.innerHTML = `
+    <h2>🔥 Twój plan</h2>
+    <p><b>${state.user.name}</b>, oto Twój plan:</p>
+
+    <p>Cel: ${cel}</p>
+    <p>Kcal: ${kcal}</p>
+
+    <ul>
+      <li>Trening 3x w tygodniu</li>
+      <li>Hip thrust / bench / pull</li>
+      <li>Cardio 2x</li>
+    </ul>
+
+    <button class="btn primary" onclick="reset()">Nowy plan</button>
+  `;
+
+  window.scrollTo({top:0, behavior:"smooth"});
 }
 
+// ─── RENDER ───
 function render() {
   const app = document.getElementById("app");
   const bar = document.getElementById("bar");
-  bar.style.width = ((state.step - 1) / 5) * 100 + "%";
 
-  if (state.loading) {
-    app.innerHTML = "<p>Generowanie planu...</p>";
-    return;
-  }
+  bar.style.width = (state.step/6)*100 + "%";
 
-  if (state.plan) {
-    app.innerHTML = `
-      <h2>Twój plan</h2>
-      <p>${state.plan.opis}</p>
-      <ul>
-        ${state.plan.trening.map(t => `<li>${t}</li>`).join("")}
-      </ul>
-      <button class="btn primary" onclick="reset()">Nowy plan</button>
-    `;
-    return;
-  }
+  if (!state.user) return renderLogin();
 
   if (state.step === 1) {
     app.innerHTML = `
       <h2>Kim jesteś?</h2>
-      <div onclick="select(1,'kobieta')" class="card">👩 Kobieta</div>
-      <div onclick="select(1,'mezczyzna')" class="card">👨 Mężczyzna</div>
-      <br>
-      <button class="btn primary" onclick="next()">Dalej</button>
+      <div class="grid">
+        <div class="card ${state.answers[1]=='kobieta'?'active':''}" onclick="select(1,'kobieta')">👩 Kobieta</div>
+        <div class="card ${state.answers[1]=='mezczyzna'?'active':''}" onclick="select(1,'mezczyzna')">👨 Mężczyzna</div>
+      </div>
+      <button class="btn primary" onclick="state.step=2;render()">Dalej</button>
     `;
   }
 
   if (state.step === 2) {
-    const goals = GOALS[state.answers[1]] || [];
     app.innerHTML = `
       <h2>Cel</h2>
-      ${goals.map(g => `<div class="card" onclick="select(2,'${g.value}')">${g.label}</div>`).join("")}
-      <br>
-      <button class="btn secondary" onclick="back()">Wróć</button>
-      <button class="btn primary" onclick="next()">Dalej</button>
+      <div class="grid">
+        <div class="card ${state.answers[2]=='masa'?'active':''}" onclick="select(2,'masa')">💪 Masa</div>
+        <div class="card ${state.answers[2]=='redukcja'?'active':''}" onclick="select(2,'redukcja')">🔥 Redukcja</div>
+      </div>
+      <button class="btn secondary" onclick="state.step=1;render()">Wróć</button>
+      <button class="btn primary" onclick="state.step=3;render()">Dalej</button>
     `;
   }
 
   if (state.step === 3) {
     app.innerHTML = `
-      <h2>Poziom</h2>
-      <div class="card" onclick="select(3,'poczatkujacy')">🌱 Początkujący</div>
-      <div class="card" onclick="select(3,'sredni')">💪 Średni</div>
-      <div class="card" onclick="select(3,'zaawansowany')">🔥 Zaawansowany</div>
-      <br>
-      <button class="btn secondary" onclick="back()">Wróć</button>
-      <button class="btn primary" onclick="next()">Dalej</button>
+      <h2>Wzrost (cm)</h2>
+      <input id="h" placeholder="np. 180">
+      <button class="btn primary" onclick="state.answers[5]=h.value;state.step=4;render()">Dalej</button>
     `;
   }
 
   if (state.step === 4) {
     app.innerHTML = `
-      <h2>Miejsce</h2>
-      <div class="card" onclick="select(4,'silownia')">🏋️ Siłownia</div>
-      <div class="card" onclick="select(4,'dom')">🏠 Dom</div>
-      <br>
-      <button class="btn secondary" onclick="back()">Wróć</button>
-      <button class="btn primary" onclick="next()">Dalej</button>
+      <h2>Waga (kg)</h2>
+      <input id="w" placeholder="np. 80">
+      <button class="btn primary" onclick="state.answers[6]=w.value;state.step=5;render()">Dalej</button>
     `;
   }
 
   if (state.step === 5) {
     app.innerHTML = `
-      <h2>Dni treningowe</h2>
-      <div class="card" onclick="select(5,'2')">2 dni</div>
-      <div class="card" onclick="select(5,'3')">3 dni</div>
-      <div class="card" onclick="select(5,'4')">4+ dni</div>
-      <br>
-      <button class="btn secondary" onclick="back()">Wróć</button>
-      <button class="btn primary" onclick="generate()">Generuj</button>
+      <h2>Ile dni?</h2>
+      <div class="grid">
+        <div class="card" onclick="select(7,2)">2 dni</div>
+        <div class="card" onclick="select(7,3)">3 dni</div>
+        <div class="card" onclick="select(7,4)">4+ dni</div>
+      </div>
+      <button class="btn primary" onclick="state.step=6;render()">Dalej</button>
     `;
+  }
+
+  if (state.step === 6) {
+    generate();
   }
 }
 
 function reset() {
   state.step = 1;
   state.answers = {};
-  state.plan = null;
   render();
 }
 
-load();
+// ─── INIT ───
+const savedUser = localStorage.getItem("user");
+if (savedUser) {
+  state.user = JSON.parse(savedUser);
+  state.step = 1;
+}
+
 render();
 </script>
 

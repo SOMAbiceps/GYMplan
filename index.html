@@ -3,332 +3,269 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FitPlan 3.0</title>
+<title>FitPlan 3.1</title>
 
 <style>
-:root {
-  --bg:#121212;
-  --card:#1e1e1e;
-  --border:#2a2a2a;
-  --text:#f5f5f5;
-  --sub:#777;
-  --accent:#00ff99;
-}
-
-body {
+body{
   margin:0;
   font-family:system-ui;
-  background:var(--bg);
-  color:var(--text);
+  background:#1f1f1f;
+  color:#fff;
+}
+
+/* LAYOUT */
+.app{
   display:flex;
 }
 
 /* SIDEBAR */
-.sidebar {
-  width:240px;
-  background:#0f0f0f;
-  border-right:1px solid var(--border);
-  padding:20px;
+.sidebar{
+  width:260px;
+  background:#181818;
   height:100vh;
-  overflow:auto;
+  padding:20px;
+  box-sizing:border-box;
 }
 
-.sidebar h2 {
-  font-size:18px;
-  margin-bottom:15px;
+.sidebar h2{
+  margin:0 0 20px;
 }
 
-.plan-item {
+.plan-item{
   padding:12px;
+  background:#222;
   border-radius:10px;
-  border:1px solid var(--border);
   margin-bottom:10px;
   cursor:pointer;
-  transition:0.2s;
-}
-
-.plan-item:hover {
-  border-color:var(--accent);
 }
 
 /* MAIN */
-.main {
+.main{
   flex:1;
   padding:20px;
-  max-width:800px;
-  margin:auto;
 }
 
-.card {
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:18px;
-  padding:22px;
-  margin-bottom:16px;
-}
-
-.title {
-  font-size:26px;
-  font-weight:800;
-}
-
-.btn {
-  width:100%;
-  padding:16px;
-  border:none;
-  border-radius:999px;
-  font-weight:700;
-  background:var(--accent);
-  color:#000;
-  margin-top:12px;
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.btn:active {
-  transform:scale(0.97);
-}
-
-.grid {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-.option {
-  padding:18px;
-  text-align:center;
-  border:1px solid var(--border);
-  border-radius:14px;
-  cursor:pointer;
-}
-
-.option.active {
-  border-color:var(--accent);
-  background:rgba(0,255,153,0.08);
-}
-
-input {
-  width:100%;
+/* BUTTON */
+.btn{
   padding:14px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:#111;
-  color:white;
+  background:#00ff88;
+  color:#000;
+  border:none;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
   margin-top:10px;
 }
 
-.fade {
-  animation:fade 0.3s ease;
+/* CARD */
+.card{
+  background:#2a2a2a;
+  padding:20px;
+  border-radius:16px;
+  margin-bottom:15px;
 }
 
-@keyframes fade {
-  from {opacity:0; transform:translateY(10px);}
-  to {opacity:1;}
+/* TRAINING SELECT */
+.training-select{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
 }
+
+.training-btn{
+  background:#333;
+  padding:18px;
+  border-radius:14px;
+  text-align:center;
+  cursor:pointer;
+  font-weight:700;
+}
+
+.training-btn:hover{
+  background:#00ff88;
+  color:#000;
+}
+
+/* EXERCISE */
+.exercise{
+  background:#262626;
+  padding:14px;
+  border-radius:12px;
+  margin-bottom:10px;
+}
+
+.timer{
+  margin-top:10px;
+  font-size:14px;
+  color:#00ff88;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="sidebar">
-  <h2>Twoje plany</h2>
-  <div id="plansList"></div>
-  <button class="btn" onclick="renderGenerator()">+ Nowy plan</button>
-</div>
+<div class="app">
 
-<div class="main" id="app"></div>
-
-<script>
-let state = JSON.parse(localStorage.getItem("fit3")) || {
-  user:null,
-  plans:[],
-  current:null,
-  progress:{}
-};
-
-function save(){
-  localStorage.setItem("fit3", JSON.stringify(state));
-  renderSidebar();
-}
-
-// ---------- SIDEBAR ----------
-function renderSidebar(){
-  const el = document.getElementById("plansList");
-  el.innerHTML = state.plans.map((p,i)=>`
-    <div class="plan-item" onclick="openPlan(${i})">
-      ${p.name}
-    </div>
-  `).join("");
-}
-
-function openPlan(i){
-  state.current = i;
-  save();
-  renderPlan();
-}
-
-// ---------- KONTO ----------
-function renderAuth(){
-  app.innerHTML = `
-  <div class="card fade">
-    <div class="title">Start</div>
-    <input id="name" placeholder="Imię">
-    <button class="btn" onclick="createUser()">Wejdź</button>
-  </div>`;
-}
-
-function createUser(){
-  state.user = {name: name.value};
-  save();
-  renderDashboard();
-}
-
-// ---------- DASHBOARD ----------
-function renderDashboard(){
-  app.innerHTML = `
-  <div class="card fade">
-    <div class="title">Cześć ${state.user.name} 👋</div>
-    <div style="color:var(--sub)">Wybierz plan lub stwórz nowy</div>
-  </div>`;
-}
-
-// ---------- GENERATOR ----------
-function renderGenerator(){
-  app.innerHTML = `
-  <div class="card fade">
-    <div class="title">Nowy plan</div>
-
-    <input id="planName" placeholder="Nazwa planu">
-
-    <div class="grid">
-      <div class="option" onclick="selectGoal(this,'masa')">Masa</div>
-      <div class="option" onclick="selectGoal(this,'redukcja')">Redukcja</div>
-      <div class="option" onclick="selectGoal(this,'gora')">Góra</div>
-      <div class="option" onclick="selectGoal(this,'dol')">Dół</div>
-      <div class="option" onclick="selectGoal(this,'fbw')">FBW</div>
-    </div>
-
-    <button class="btn" onclick="generate()">Stwórz plan</button>
-  </div>`;
-}
-
-function selectGoal(el,g){
-  document.querySelectorAll(".option").forEach(o=>o.classList.remove("active"));
-  el.classList.add("active");
-  state.goal=g;
-}
-
-// ---------- GENEROWANIE ----------
-function generate(){
-
-  const base = {
-    masa:[
-      ["Push",["Bench 5x5","Incline DB 4x10","OHP 4x8","Dipy 3xMax","Triceps 3x12"]],
-      ["Pull",["Pull ups 4xMax","Row 5x5","Lat pulldown 4x10","Face pull 3x15","Biceps 3x12"]],
-      ["Legs",["Squat 5x5","Leg press 4x10","RDL 4x10","Lunges 3x12","Calves 4x15"]]
-    ],
-    fbw:[
-      ["Full Body",["Squat 5x5","Bench 5x5","Row 5x5","OHP 3x8","Core 3x15"]]
-    ],
-    gora:[
-      ["Upper",["Bench 5x5","Pull ups 4xMax","OHP 4x8","Row 4x10","Arms 3x12"]]
-    ],
-    dol:[
-      ["Lower",["Squat 5x5","RDL 4x10","Leg press 4x10","Lunges 3x12","Calves 4x15"]]
-    ],
-    redukcja:[
-      ["Full Body + HIIT",["Squat 4x10","Bench 4x10","Row 4x10","Burpees 3x15","Sprint 10x30s"]]
-    ]
-  };
-
-  const data = base[state.goal] || base.masa;
-
-  const plan = {
-    name: planName.value || "Plan",
-    workouts: data.map(w=>({
-      name:w[0],
-      exercises:w[1].map(e=>{
-        const [n,rest]=e.split(" ");
-        return {name:n+" "+rest}
-      })
-    }))
-  };
-
-  state.plans.push(plan);
-  state.current = state.plans.length-1;
-  save();
-  renderPlan();
-}
-
-// ---------- PLAN ----------
-function renderPlan(){
-  const p = state.plans[state.current];
-
-  app.innerHTML = `
-  <div class="card fade">
-    <div class="title">${p.name}</div>
-    <button class="btn" onclick="startWorkout()">Start trening</button>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <h2>📁 Twoje plany</h2>
+    <div id="savedPlans"></div>
+    <button class="btn" onclick="newPlan()">+ Nowy plan</button>
   </div>
 
-  ${p.workouts.map(w=>`
-    <div class="card">
-      <b>${w.name}</b>
-      ${w.exercises.map(e=>`<div style="margin-top:8px;">${e.name}</div>`).join("")}
-    </div>`).join("")}
-  `;
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- START -->
+    <div id="start">
+      <h1>FitPlan</h1>
+      <p>Stwórz plan treningowy</p>
+      <button class="btn" onclick="generatePlan()">START</button>
+    </div>
+
+    <!-- SELECT DAY -->
+    <div id="selectDay" style="display:none;">
+      <h2>Co dziś robisz?</h2>
+      <div class="training-select" id="trainingButtons"></div>
+    </div>
+
+    <!-- TRAINING VIEW -->
+    <div id="trainingView"></div>
+
+  </div>
+</div>
+
+<script>
+
+let currentPlan = null;
+
+// GENERATE PLAN
+function generatePlan(){
+
+  currentPlan = {
+    name:"Plan PUSH/PULL/LEGS",
+    trainings:{
+      push:[
+        {name:"Wyciskanie sztangi", sets:4, reps:"6-10"},
+        {name:"Wyciskanie hantli", sets:4, reps:"8-12"},
+        {name:"Dipy", sets:3, reps:"max"},
+        {name:"Unoszenie bokiem", sets:4, reps:"12-15"},
+        {name:"Triceps linka", sets:3, reps:"12-15"}
+      ],
+      pull:[
+        {name:"Podciąganie", sets:4, reps:"max"},
+        {name:"Wiosłowanie sztangą", sets:4, reps:"8-10"},
+        {name:"Ściąganie drążka", sets:3, reps:"10-12"},
+        {name:"Face pull", sets:3, reps:"15"},
+        {name:"Biceps hantle", sets:3, reps:"10-12"}
+      ],
+      legs:[
+        {name:"Przysiad", sets:5, reps:"5"},
+        {name:"Leg press", sets:4, reps:"10"},
+        {name:"Martwy RDL", sets:4, reps:"10"},
+        {name:"Łydki", sets:4, reps:"15"},
+        {name:"Hip thrust", sets:4, reps:"12"}
+      ]
+    }
+  };
+
+  document.getElementById("start").style.display="none";
+  document.getElementById("selectDay").style.display="block";
+
+  renderTrainingButtons();
+  savePlan();
 }
 
-// ---------- TRENING ----------
-let cw=0, ce=0;
+// BUTTONS
+function renderTrainingButtons(){
+  const container = document.getElementById("trainingButtons");
+  container.innerHTML="";
 
-function startWorkout(){
-  cw=0; ce=0;
-  renderWorkout();
+  Object.keys(currentPlan.trainings).forEach(type=>{
+    const btn = document.createElement("div");
+    btn.className="training-btn";
+    btn.innerText=type.toUpperCase();
+    btn.onclick=()=>showTraining(type);
+    container.appendChild(btn);
+  });
 }
 
-function renderWorkout(){
-  const w = state.plans[state.current].workouts[cw];
-  const e = w.exercises[ce];
+// SHOW TRAINING
+function showTraining(type){
 
-  app.innerHTML = `
-  <div class="card fade">
-    <div class="title">${w.name}</div>
-    <div style="font-size:28px;margin:20px 0;">${e.name}</div>
+  const view = document.getElementById("trainingView");
+  view.innerHTML = `<h2>${type.toUpperCase()}</h2>`;
 
-    <input id="kg" placeholder="Ciężar">
+  currentPlan.trainings[type].forEach(ex=>{
+    const div = document.createElement("div");
+    div.className="exercise";
 
-    <button class="btn" onclick="next()">Dalej</button>
-  </div>`;
+    div.innerHTML = `
+      <strong>${ex.name}</strong><br>
+      ${ex.sets} serie × ${ex.reps}
+      <div class="timer" onclick="startTimer(this)">⏱ Start timer</div>
+    `;
+
+    view.appendChild(div);
+  });
 }
 
-function next(){
-  ce++;
-  const w = state.plans[state.current].workouts[cw];
+// TIMER
+function startTimer(el){
+  let time = 60;
+  el.innerText = "60s";
 
-  if(ce >= w.exercises.length){
-    cw++; ce=0;
-  }
-
-  if(cw >= state.plans[state.current].workouts.length){
-    alert("🔥 Trening skończony");
-    renderPlan();
-    return;
-  }
-
-  renderWorkout();
+  const interval = setInterval(()=>{
+    time--;
+    el.innerText = time+"s";
+    if(time<=0){
+      clearInterval(interval);
+      el.innerText="✔ Gotowe";
+    }
+  },1000);
 }
 
-// ---------- INIT ----------
-function init(){
-  renderSidebar();
-
-  if(!state.user) return renderAuth();
-  if(state.plans.length === 0) return renderDashboard();
-  renderPlan();
+// SAVE
+function savePlan(){
+  let plans = JSON.parse(localStorage.getItem("plans") || "[]");
+  plans.push(currentPlan);
+  localStorage.setItem("plans", JSON.stringify(plans));
+  renderSaved();
 }
 
-init();
+// LOAD
+function renderSaved(){
+  const container = document.getElementById("savedPlans");
+  container.innerHTML="";
+
+  let plans = JSON.parse(localStorage.getItem("plans") || "[]");
+
+  plans.forEach((p,i)=>{
+    const div = document.createElement("div");
+    div.className="plan-item";
+    div.innerText = p.name;
+    div.onclick=()=>{
+      currentPlan=p;
+      document.getElementById("start").style.display="none";
+      document.getElementById("selectDay").style.display="block";
+      renderTrainingButtons();
+    };
+    container.appendChild(div);
+  });
+}
+
+// NEW PLAN
+function newPlan(){
+  document.getElementById("start").style.display="block";
+  document.getElementById("selectDay").style.display="none";
+  document.getElementById("trainingView").innerHTML="";
+}
+
+// INIT
+renderSaved();
+
 </script>
+
 </body>
 </html>

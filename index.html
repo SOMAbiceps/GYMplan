@@ -10,10 +10,8 @@ body {
     margin:0;
     font-family: system-ui;
     background:#e5e5e5;
-    color:#111;
 }
 
-/* LOGIN */
 #login {
     display:flex;
     height:100vh;
@@ -26,7 +24,6 @@ body {
     padding:30px;
     border-radius:20px;
     width:300px;
-    text-align:center;
 }
 
 input {
@@ -47,7 +44,6 @@ button {
     cursor:pointer;
 }
 
-/* APP */
 #app {
     display:none;
 }
@@ -74,21 +70,11 @@ header {
     padding:20px;
 }
 
-/* KAFELKI */
-.grid {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:15px;
-}
-
 .card {
     background:white;
     padding:15px;
     border-radius:15px;
-}
-
-.exercise {
-    margin-bottom:20px;
+    margin-bottom:15px;
 }
 
 .timer {
@@ -99,12 +85,9 @@ header {
     color:white;
     padding:20px;
     border-radius:50%;
-    font-size:20px;
 }
 
-.hidden {
-    display:none;
-}
+.hidden { display:none; }
 
 @media(max-width:768px){
     .sidebar {
@@ -115,39 +98,33 @@ header {
     .main {
         margin:0;
     }
-    .grid {
-        grid-template-columns:1fr;
-    }
 }
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
 <div id="login">
     <div class="box">
         <h2>Login</h2>
-        <input id="user" placeholder="Login">
-        <input id="pass" type="password" placeholder="Hasło">
-        <button onclick="login()">Zaloguj</button>
+        <input id="user">
+        <input id="pass" type="password">
+        <button id="loginBtn">Zaloguj</button>
     </div>
 </div>
 
-<!-- APP -->
 <div id="app">
 <header>
     <h3 id="welcome"></h3>
-    <button onclick="logout()">Wyloguj</button>
+    <button id="logoutBtn">Wyloguj</button>
 </header>
 
 <div class="sidebar">
-    <h4>Plany</h4>
-    <button onclick="loadPlan('push')">Push</button>
-    <button onclick="loadPlan('pull')">Pull</button>
-    <button onclick="loadPlan('legs')">Legs</button>
-    <button onclick="loadPlan('upper')">Upper</button>
-    <button onclick="loadPlan('lower')">Lower</button>
+    <button data-plan="push">Push</button>
+    <button data-plan="pull">Pull</button>
+    <button data-plan="legs">Legs</button>
+    <button data-plan="upper">Upper</button>
+    <button data-plan="lower">Lower</button>
 </div>
 
 <div class="main">
@@ -159,17 +136,27 @@ header {
 
 <script>
 
-let currentUser = null;
+// ELEMENTY (TO JEST KLUCZOWY FIX)
+const loginDiv = document.getElementById("login");
+const appDiv = document.getElementById("app");
+const userInput = document.getElementById("user");
+const passInput = document.getElementById("pass");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const welcome = document.getElementById("welcome");
+const planDiv = document.getElementById("plan");
+const timer = document.getElementById("timer");
+
 let timerInterval;
 
 /* LOGIN */
-function login(){
-    const u = user.value;
-    const p = pass.value;
+loginBtn.onclick = () => {
+    const u = userInput.value;
+    const p = passInput.value;
 
     if(!u || !p) return alert("Wpisz dane");
 
-    let users = JSON.parse(localStorage.getItem("users")||"{}");
+    let users = JSON.parse(localStorage.getItem("users") || "{}");
 
     if(!users[u]) users[u] = p;
 
@@ -177,59 +164,48 @@ function login(){
 
     localStorage.setItem("users", JSON.stringify(users));
 
-    currentUser = u;
     welcome.innerText = "Cześć " + u;
 
-    loginDiv(false);
-}
-
-function logout(){
-    currentUser=null;
-    loginDiv(true);
-}
-
-function loginDiv(show){
-    login.style.display = show ? "flex":"none";
-    app.style.display = show ? "none":"block";
-}
-
-/* PLAN */
-const plans = {
-push:[
-"Bench Press","Incline Dumbbell Press","Shoulder Press","Lateral Raise","Triceps Pushdown"
-],
-pull:[
-"Pull Ups","Barbell Row","Lat Pulldown","Face Pull","Biceps Curl"
-],
-legs:[
-"Squat","Leg Press","Romanian Deadlift","Leg Curl","Calf Raise"
-],
-upper:[
-"Bench Press","Row","Shoulder Press","Pull Ups","Curls","Triceps"
-],
-lower:[
-"Squat","Deadlift","Leg Curl","Leg Extension","Calf Raise"
-]
+    loginDiv.style.display = "none";
+    appDiv.style.display = "block";
 };
 
+logoutBtn.onclick = () => {
+    loginDiv.style.display = "flex";
+    appDiv.style.display = "none";
+};
+
+/* PLANY */
+const plans = {
+push:["Bench Press","Incline Press","Shoulder Press","Lateral Raise","Triceps"],
+pull:["Pull Ups","Row","Lat Pulldown","Face Pull","Biceps"],
+legs:["Squat","Leg Press","RDL","Leg Curl","Calf"],
+upper:["Bench","Row","Shoulders","Pull","Arms"],
+lower:["Squat","Deadlift","Leg Curl","Extension","Calf"]
+};
+
+/* WYBÓR PLANU */
+document.querySelectorAll(".sidebar button").forEach(btn=>{
+    btn.onclick = () => loadPlan(btn.dataset.plan);
+});
+
 function loadPlan(type){
-    const planDiv = document.getElementById("plan");
     planDiv.innerHTML = "";
 
     plans[type].forEach(ex=>{
-        const el = document.createElement("div");
-        el.className="card";
+        const div = document.createElement("div");
+        div.className = "card";
 
-        el.innerHTML = `
-        <div class="exercise">
+        div.innerHTML = `
             <h4>${ex}</h4>
             <input placeholder="kg">
             <input placeholder="powtórzenia">
-            <button onclick="startTimer()">Start</button>
-        </div>
+            <button class="startBtn">Start</button>
         `;
 
-        planDiv.appendChild(el);
+        div.querySelector(".startBtn").onclick = startTimer;
+
+        planDiv.appendChild(div);
     });
 }
 
@@ -244,7 +220,8 @@ function startTimer(){
     timerInterval = setInterval(()=>{
         time--;
         timer.innerText = time;
-        if(time<=0){
+
+        if(time <= 0){
             clearInterval(timerInterval);
             timer.classList.add("hidden");
         }

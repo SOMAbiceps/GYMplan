@@ -6,69 +6,125 @@
 <title>Gym Planner Pro</title>
 
 <style>
+* { box-sizing: border-box; }
+
 body {
   margin:0;
   font-family: system-ui;
-  background:#1c1c1e;
+  background:#18181a;
   color:white;
+  display:flex;
 }
 
-.container {
-  max-width:1200px;
-  margin:auto;
+/* SIDEBAR */
+.sidebar {
+  width:260px;
+  background:#202024;
+  height:100vh;
   padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:15px;
 }
 
-h1 {
-  font-size:32px;
-}
-
-.btn {
-  background:#4ade80;
-  color:black;
-  padding:14px;
-  border:none;
-  border-radius:12px;
+.logo {
+  font-size:22px;
   font-weight:bold;
-  cursor:pointer;
-  width:100%;
-  margin-top:10px;
-  font-size:16px;
 }
 
-.card {
-  background:#2c2c2e;
-  padding:20px;
-  border-radius:16px;
-  margin-bottom:15px;
-}
-
-input {
+.nav button {
   width:100%;
   padding:12px;
-  border-radius:10px;
   border:none;
-  margin-top:10px;
-  background:#3a3a3c;
+  border-radius:10px;
+  background:#2c2c2e;
   color:white;
+  cursor:pointer;
+  text-align:left;
+}
+
+.nav button:hover {
+  background:#4ade80;
+  color:black;
+}
+
+/* MAIN */
+.main {
+  flex:1;
+  padding:30px;
+  overflow:auto;
+}
+
+/* CARDS */
+.card {
+  background:#202024;
+  padding:20px;
+  border-radius:16px;
+  margin-bottom:20px;
+  animation:fade 0.3s ease;
+}
+
+@keyframes fade {
+  from {opacity:0; transform:translateY(10px);}
+  to {opacity:1;}
 }
 
 .grid {
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:15px;
 }
 
+/* EXERCISE TILE */
 .exercise {
-  background:#3a3a3c;
+  background:#2c2c2e;
   padding:15px;
-  border-radius:12px;
+  border-radius:14px;
+  transition:0.2s;
 }
 
-.timer {
-  font-size:28px;
-  text-align:center;
+.exercise:hover {
+  transform:scale(1.03);
+}
+
+input {
+  width:100%;
+  margin-top:8px;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#3a3a3c;
+  color:white;
+}
+
+/* BUTTON */
+.btn {
   margin-top:10px;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#4ade80;
+  color:black;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* TIMER */
+.timer {
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  border:6px solid #4ade80;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  margin:auto;
+  margin-top:15px;
+}
+
+.center {
+  text-align:center;
 }
 
 </style>
@@ -76,26 +132,38 @@ input {
 
 <body>
 
-<div class="container">
+<!-- SIDEBAR -->
+<div class="sidebar">
+<div class="logo">Gym Planner</div>
 
-<h1>Gym Planner</h1>
+<div class="nav">
+<button onclick="showPage('home')">Start</button>
+<button onclick="showPage('plans')">Plany</button>
+<button onclick="showPage('account')">Konto</button>
+</div>
+
+</div>
+
+<!-- MAIN -->
+<div class="main">
 
 <!-- LOGIN -->
-<div id="auth" class="card">
-<h2>Konto</h2>
-<input id="username" placeholder="Nazwa użytkownika">
-<button class="btn" onclick="login()">Zaloguj</button>
+<div id="loginPage" class="card center">
+<h2>Logowanie</h2>
+<input id="username" placeholder="Nazwa">
+<button class="btn" onclick="login()">Wejdź</button>
 </div>
 
-<!-- APP -->
-<div id="app" style="display:none;">
-
+<!-- HOME -->
+<div id="homePage" style="display:none;">
 <div class="card">
 <h2 id="welcome"></h2>
-<button class="btn" onclick="logout()">Wyloguj</button>
+<p>Wybierz trening i zacznij.</p>
+</div>
 </div>
 
-<!-- WYBÓR PLANU -->
+<!-- PLANS -->
+<div id="plansPage" style="display:none;">
 <div class="card">
 <h2>Wybierz trening</h2>
 
@@ -109,17 +177,16 @@ input {
 
 </div>
 
-<!-- TRENING -->
-<div id="workout" class="card" style="display:none;">
-<h2 id="workoutTitle"></h2>
-
-<div id="exerciseList"></div>
-
-<div class="timer" id="timer">60</div>
-<button class="btn" onclick="startTimer()">Start odpoczynku</button>
+<div id="workoutContainer"></div>
 
 </div>
 
+<!-- ACCOUNT -->
+<div id="accountPage" style="display:none;">
+<div class="card">
+<h2>Konto</h2>
+<button class="btn" onclick="logout()">Wyloguj</button>
+</div>
 </div>
 
 </div>
@@ -128,16 +195,22 @@ input {
 
 let user = localStorage.getItem("user");
 
-if(user){
-  showApp(user);
+const pages = ["home","plans","account"];
+
+function showPage(page){
+  pages.forEach(p=>{
+    document.getElementById(p+"Page").style.display="none";
+  });
+  document.getElementById(page+"Page").style.display="block";
 }
 
 function login(){
   let name = document.getElementById("username").value;
-  if(name){
-    localStorage.setItem("user", name);
-    showApp(name);
-  }
+  if(!name) return;
+
+  localStorage.setItem("user", name);
+  user = name;
+  initApp();
 }
 
 function logout(){
@@ -145,77 +218,82 @@ function logout(){
   location.reload();
 }
 
-function showApp(name){
-  document.getElementById("auth").style.display="none";
-  document.getElementById("app").style.display="block";
-  document.getElementById("welcome").innerText="Cześć " + name;
+function initApp(){
+  document.getElementById("loginPage").style.display="none";
+  showPage("home");
+  document.getElementById("welcome").innerText = "Cześć " + user;
 }
 
+if(user) initApp();
+
+/* PLANY */
 const plans = {
 push:[
 ["Bench Press",4,8],
-["Incline DB Press",4,10],
+["Incline DB",4,10],
 ["Shoulder Press",4,8],
-["Lateral Raises",4,12],
-["Triceps Pushdown",4,12],
-["Dips",3, max=12]
+["Lateral Raise",4,12],
+["Triceps",4,12]
 ],
 pull:[
-["Pull Ups",4,8],
-["Barbell Row",4,8],
+["Pull Up",4,8],
+["Row",4,8],
 ["Lat Pulldown",4,10],
 ["Face Pull",4,12],
-["Biceps Curl",4,10],
-["Hammer Curl",3,12]
+["Biceps",4,10]
 ],
 legs:[
 ["Squat",4,8],
 ["Leg Press",4,10],
 ["RDL",4,8],
-["Leg Curl",4,12],
-["Calf Raises",5,15]
+["Curl",4,12],
+["Calves",5,15]
 ],
 upper:[
-["Bench Press",4,8],
-["Pull Ups",4,8],
-["Shoulder Press",4,8],
-["Row",4,10],
-["Biceps",3,12],
-["Triceps",3,12]
+["Bench",4,8],
+["Pull Up",4,8],
+["Shoulder",4,8],
+["Row",4,10]
 ],
 lower:[
 ["Squat",4,8],
 ["RDL",4,8],
-["Leg Press",4,10],
-["Leg Curl",4,12],
-["Calves",5,15]
+["Press",4,10],
+["Curl",4,12]
 ]
 };
 
 function startWorkout(type){
-  document.getElementById("workout").style.display="block";
-  document.getElementById("workoutTitle").innerText=type.toUpperCase();
 
-  let list = document.getElementById("exerciseList");
-  list.innerHTML="";
+  let container = document.getElementById("workoutContainer");
+  container.innerHTML="";
 
-  plans[type].forEach(ex=>{
-    let div=document.createElement("div");
-    div.className="exercise";
+  let div = document.createElement("div");
+  div.className="card";
 
-    div.innerHTML = `
+  let html = `<h2>${type.toUpperCase()}</h2><div class="grid">`;
+
+  plans[type].forEach((ex,i)=>{
+    html += `
+    <div class="exercise">
       <strong>${ex[0]}</strong><br>
-      Serie: ${ex[1]} | Powtórzenia: ${ex[2]}<br>
-      <input placeholder="kg">
-      <input placeholder="powtórzenia">
-    `;
-
-    list.appendChild(div);
+      ${ex[1]}x${ex[2]}
+      <input placeholder="kg" onchange="save('${type}',${i},this.value,'kg')">
+      <input placeholder="powt." onchange="save('${type}',${i},this.value,'reps')">
+    </div>`;
   });
+
+  html += `</div>
+  <div class="timer" id="timer">60</div>
+  <button class="btn" onclick="startTimer()">Start odpoczynku</button>
+  `;
+
+  div.innerHTML = html;
+  container.appendChild(div);
 }
 
-let time=60;
-let interval;
+/* TIMER */
+let time=60, interval;
 
 function startTimer(){
   clearInterval(interval);
@@ -227,10 +305,20 @@ function startTimer(){
 
     if(time<=0){
       clearInterval(interval);
-      alert("Koniec odpoczynku!");
     }
-
   },1000);
+}
+
+/* SAVE */
+function save(type,index,value,key){
+  let data = JSON.parse(localStorage.getItem("progress")||"{}");
+
+  if(!data[type]) data[type]={};
+  if(!data[type][index]) data[type][index]={};
+
+  data[type][index][key]=value;
+
+  localStorage.setItem("progress",JSON.stringify(data));
 }
 
 </script>

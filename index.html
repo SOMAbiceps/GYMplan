@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FitPlan 4.0</title>
+<title>FitPlan 5.0</title>
 
 <style>
 body{
@@ -13,34 +13,31 @@ body{
   color:#fff;
 }
 
-.app{display:flex}
-
-/* SIDEBAR */
-.sidebar{
-  width:260px;
-  background:#181818;
-  padding:20px;
+/* CENTER */
+.center{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
   height:100vh;
-  box-sizing:border-box;
 }
 
-.plan-item{
-  background:#2a2a2a;
+/* INPUT */
+input{
   padding:12px;
+  margin:5px;
   border-radius:10px;
-  margin-bottom:10px;
-  cursor:pointer;
+  border:none;
+  width:220px;
 }
-
-/* MAIN */
-.main{flex:1;padding:20px}
 
 /* BUTTON */
 .btn{
-  background:#00ff88;
+  padding:14px 22px;
   border:none;
-  padding:14px;
-  border-radius:10px;
+  border-radius:12px;
+  background:#00ff88;
+  color:#000;
   font-weight:700;
   cursor:pointer;
   margin-top:10px;
@@ -50,47 +47,60 @@ body{
 .card{
   background:#2a2a2a;
   padding:20px;
-  border-radius:14px;
-  margin-bottom:15px;
+  border-radius:16px;
+  margin:10px;
+  width:90%;
+  max-width:420px;
 }
 
 /* SPLIT */
-.split-btn{
+.option{
   background:#333;
   padding:16px;
   border-radius:12px;
   margin-bottom:10px;
-  cursor:pointer;
-  font-weight:700;
   text-align:center;
+  cursor:pointer;
 }
 
-.split-btn:hover{
+.option:hover{
   background:#00ff88;
   color:#000;
 }
 
-/* EXERCISE */
-.exercise{
-  background:#262626;
-  padding:14px;
-  border-radius:12px;
-  margin-top:10px;
+/* COUNTDOWN */
+#countdown{
+  font-size:80px;
+  text-align:center;
 }
 
-input{
-  width:70px;
-  padding:6px;
-  border-radius:6px;
-  border:none;
-  margin-left:10px;
+/* TRAINING */
+.exercise{
+  text-align:center;
+}
+
+.set{
+  background:#262626;
+  padding:10px;
+  border-radius:10px;
+  margin-top:6px;
+}
+
+.done{
+  background:#00ff88;
+  color:#000;
 }
 
 .timer{
-  margin-top:8px;
+  margin-top:10px;
   color:#00ff88;
   cursor:pointer;
-  font-size:14px;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  padding:15px;
 }
 
 </style>
@@ -98,137 +108,193 @@ input{
 
 <body>
 
-<div class="app">
-
-<!-- SIDEBAR -->
-<div class="sidebar">
-  <h3>📁 Plany</h3>
-  <div id="saved"></div>
-  <button class="btn" onclick="reset()">+ Nowy</button>
-</div>
-
-<!-- MAIN -->
-<div class="main">
-
-<div id="start">
-  <h1>FitPlan</h1>
-  <p>Wybierz split</p>
-
-  <div class="split-btn" onclick="generate('ppl')">Push / Pull / Legs</div>
-  <div class="split-btn" onclick="generate('ul')">Upper / Lower</div>
-</div>
-
-<div id="plan"></div>
-
-</div>
-</div>
+<div id="app"></div>
 
 <script>
 
-let currentPlan=null;
+let user = localStorage.getItem("user");
 
-// GENERATE
-function generate(type){
+// ---------- LOGIN ----------
+function loginView(){
+app.innerHTML=`
+<div class="center">
+<h1>FitPlan</h1>
+<input id="login" placeholder="Login">
+<input id="pass" placeholder="Hasło" type="password">
+<button class="btn" onclick="login()">Zaloguj</button>
+</div>`;
+}
+
+function login(){
+let u=document.getElementById("login").value;
+if(!u) return;
+
+localStorage.setItem("user",u);
+user=u;
+home();
+}
+
+function logout(){
+localStorage.removeItem("user");
+loginView();
+}
+
+// ---------- HOME ----------
+function home(){
+app.innerHTML=`
+<div class="topbar">
+<div>${user}</div>
+<button onclick="logout()">Wyloguj</button>
+</div>
+
+<div class="center">
+<h2>Wybierz split</h2>
+
+<div class="option" onclick="selectSplit('ppl')">Push Pull Legs</div>
+<div class="option" onclick="selectSplit('ul')">Upper Lower</div>
+
+</div>`;
+}
+
+// ---------- SPLIT ----------
+let currentPlan;
+
+function selectSplit(type){
 
 if(type==="ppl"){
 currentPlan={
-name:"PPL",
-trainings:{
 Push:[
 ["Wyciskanie sztangi",4,"6-10"],
 ["Wyciskanie hantli",4,"8-12"],
-["Dipy",3,"max"],
-["Barki bokiem",4,"12-15"],
-["Triceps linka",3,"12-15"]
+["Dipy",3,"max"]
 ],
 Pull:[
 ["Podciąganie",4,"max"],
 ["Wiosłowanie",4,"8-10"],
-["Ściąganie drążka",3,"10-12"],
-["Face pull",3,"15"],
-["Biceps hantle",3,"10-12"]
+["Biceps",3,"12"]
 ],
 Legs:[
 ["Przysiad",5,"5"],
-["Leg press",4,"10"],
 ["RDL",4,"10"],
-["Łydki",4,"15"],
-["Hip thrust",4,"12"]
+["Łydki",4,"15"]
 ]
-}
 };
 }
 
 if(type==="ul"){
 currentPlan={
-name:"Upper/Lower",
-trainings:{
 Upper:[
-["Wyciskanie sztangi",4,"6-10"],
+["Wyciskanie",4,"8"],
 ["Podciąganie",4,"max"],
-["Wiosłowanie",3,"10"],
-["Barki bokiem",3,"15"],
-["Biceps",3,"12"],
-["Triceps",3,"12"]
+["Barki",3,"12"]
 ],
 Lower:[
 ["Przysiad",5,"5"],
 ["RDL",4,"10"],
-["Leg press",4,"10"],
-["Łydki",4,"15"],
-["Hip thrust",4,"12"]
+["Łydki",4,"15"]
 ]
-}
 };
 }
 
-renderPlan();
-save();
+chooseDay();
 }
 
-// RENDER
-function renderPlan(){
-const planDiv=document.getElementById("plan");
-planDiv.innerHTML="";
+// ---------- CHOOSE DAY ----------
+function chooseDay(){
 
-Object.keys(currentPlan.trainings).forEach(day=>{
-const card=document.createElement("div");
-card.className="card";
+app.innerHTML=`
+<div class="center">
+<h2>Wybierz trening</h2>
+</div>`;
 
-card.innerHTML=`<h2>${day}</h2>`;
+Object.keys(currentPlan).forEach(day=>{
+let div=document.createElement("div");
+div.className="option";
+div.innerText=day;
+div.onclick=()=>startCountdown(day);
+app.appendChild(div);
+});
+}
 
-currentPlan.trainings[day].forEach((ex,i)=>{
-const div=document.createElement("div");
-div.className="exercise";
+// ---------- COUNTDOWN ----------
+function startCountdown(day){
 
-const key=day+i;
-const saved=localStorage.getItem(key)||"";
+app.innerHTML=`<div id="countdown">3</div>`;
 
-div.innerHTML=`
-<strong>${ex[0]}</strong><br>
-${ex[1]} serie × ${ex[2]}
-<br><br>
-KG: <input value="${saved}" oninput="saveWeight('${key}',this.value)">
-<div class="timer" onclick="timer(this)">⏱ start</div>
+let c=3;
+let i=setInterval(()=>{
+c--;
+document.getElementById("countdown").innerText=c;
+
+if(c===0){
+clearInterval(i);
+startWorkout(day);
+}
+},800);
+}
+
+// ---------- WORKOUT ----------
+let exIndex=0;
+let setDone=0;
+let currentDay;
+
+function startWorkout(day){
+currentDay=day;
+exIndex=0;
+setDone=0;
+showExercise();
+}
+
+function showExercise(){
+
+let ex=currentPlan[currentDay][exIndex];
+
+app.innerHTML=`
+<div class="topbar">
+<div>${currentDay}</div>
+<button onclick="home()">X</button>
+</div>
+
+<div class="center">
+
+<div class="card">
+<div class="exercise">
+<h2>${ex[0]}</h2>
+<p>${ex[1]} serie × ${ex[2]}</p>
+
+<input id="kg" placeholder="KG">
+
+<div id="sets"></div>
+
+<div class="timer" onclick="timer(this)">⏱ timer</div>
+
+</div>
+</div>
+
+</div>
 `;
 
-card.appendChild(div);
-});
+let setsDiv=document.getElementById("sets");
 
-planDiv.appendChild(card);
-});
-
-document.getElementById("start").style.display="none";
+for(let i=0;i<ex[1];i++){
+let s=document.createElement("div");
+s.className="set";
+s.innerText="Seria "+(i+1);
+s.onclick=()=>{
+s.classList.toggle("done");
+};
+setsDiv.appendChild(s);
+}
 }
 
 // TIMER
 function timer(el){
 let t=60;
-el.innerText=t+"s";
+el.innerText=t;
 
-const i=setInterval(()=>{
+let i=setInterval(()=>{
 t--;
-el.innerText=t+"s";
+el.innerText=t;
 if(t<=0){
 clearInterval(i);
 el.innerText="✔";
@@ -236,45 +302,12 @@ el.innerText="✔";
 },1000);
 }
 
-// SAVE KG
-function saveWeight(key,val){
-localStorage.setItem(key,val);
+// INIT
+if(user){
+home();
+}else{
+loginView();
 }
-
-// SAVE PLAN
-function save(){
-let arr=JSON.parse(localStorage.getItem("plans")||"[]");
-arr.push(currentPlan);
-localStorage.setItem("plans",JSON.stringify(arr));
-renderSaved();
-}
-
-// SIDEBAR
-function renderSaved(){
-const el=document.getElementById("saved");
-el.innerHTML="";
-
-let arr=JSON.parse(localStorage.getItem("plans")||"[]");
-
-arr.forEach(p=>{
-const div=document.createElement("div");
-div.className="plan-item";
-div.innerText=p.name;
-div.onclick=()=>{
-currentPlan=p;
-renderPlan();
-};
-el.appendChild(div);
-});
-}
-
-// RESET
-function reset(){
-document.getElementById("start").style.display="block";
-document.getElementById("plan").innerHTML="";
-}
-
-renderSaved();
 
 </script>
 

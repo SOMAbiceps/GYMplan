@@ -2,294 +2,222 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>FitPlan AI</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitPlan AI</title>
 
 <style>
-body {
-  margin:0;
-  font-family: system-ui;
-  background:#0b0b0b;
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui;
+  background:#0b0b0f;
   color:#fff;
+  display:flex;
+  justify-content:center;
 }
 
-.wrap {
-  max-width:620px;
-  margin:auto;
-  padding:30px 18px 80px;
+.app{
+  width:100%;
+  max-width:420px;
+  padding:20px 16px 80px;
 }
 
-h1 { text-align:center; }
+h1{
+  font-size:28px;
+  font-weight:800;
+  text-align:center;
+}
 
-.grid {
+.sub{
+  text-align:center;
+  color:#777;
+  font-size:13px;
+  margin-bottom:25px;
+}
+
+.progress{
+  height:4px;
+  background:#1a1a1a;
+  border-radius:10px;
+  overflow:hidden;
+  margin-bottom:25px;
+}
+.bar{
+  height:100%;
+  width:33%;
+  background:linear-gradient(90deg,#c8f045,#00ffd5);
+  transition:0.3s;
+}
+
+.grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:12px;
 }
 
-.card {
-  background:#161616;
-  border:1.5px solid #2a2a2a;
-  border-radius:16px;
-  padding:18px;
+.card{
+  background:rgba(255,255,255,0.04);
+  border:1px solid #222;
+  border-radius:14px;
+  padding:18px 10px;
   text-align:center;
   cursor:pointer;
   transition:0.2s;
 }
 
-.card.active {
-  border-color:#c8f045;
-  box-shadow:0 0 10px rgba(200,240,69,0.3);
+.card:hover{border-color:#c8f045}
+.card.active{
+  border:2px solid #c8f045;
+  background:rgba(200,240,69,0.1);
 }
 
-.btn {
-  padding:12px 22px;
+.icon{font-size:26px;margin-bottom:6px}
+.label{font-weight:600;font-size:13px}
+
+.btn{
+  margin-top:20px;
+  width:100%;
+  padding:14px;
+  border:none;
   border-radius:999px;
   font-weight:700;
-  border:none;
+  background:linear-gradient(90deg,#c8f045,#00ffd5);
+  color:#000;
   cursor:pointer;
-  margin-top:20px;
 }
 
-.primary { background:#c8f045; color:#000; }
-.secondary { background:#1e1e1e; color:#aaa; }
-
-input {
-  width:100%;
-  padding:12px;
-  border-radius:10px;
-  border:1px solid #2a2a2a;
-  background:#161616;
-  color:#fff;
-  margin-top:10px;
+.btn:disabled{
+  background:#222;
+  color:#555;
 }
 
-.plan {
-  background:#161616;
-  padding:20px;
-  border-radius:16px;
-  border:1px solid #2a2a2a;
+.step{display:none}
+.step.active{display:block}
+
+.header{
+  margin-bottom:30px;
 }
 
-.progressBar {
-  height:6px;
-  background:#1e1e1e;
-  border-radius:999px;
-  margin:10px 0;
-}
-
-.progressFill {
-  height:100%;
-  background:#c8f045;
-  border-radius:999px;
+.premium{
+  background:linear-gradient(90deg,#c8f045,#00ffd5);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
 }
 </style>
 </head>
 
 <body>
-<div class="wrap">
-<h1>FitPlan AI</h1>
-<div id="app"></div>
+
+<div class="app">
+
+<div class="header">
+  <h1>FitPlan <span class="premium">AI</span></h1>
+  <div class="sub">Twój personalny plan treningowy</div>
+</div>
+
+<div class="progress"><div class="bar" id="bar"></div></div>
+
+<!-- STEP 1 -->
+<div class="step active" id="step1">
+  <h2>Kim jesteś?</h2>
+  <div class="grid">
+    <div class="card" onclick="select(1,'kobieta',this)">👩<div>Kobieta</div></div>
+    <div class="card" onclick="select(1,'mezczyzna',this)">👨<div>Mężczyzna</div></div>
+  </div>
+  <button class="btn" id="next1" disabled onclick="next()">Dalej</button>
+</div>
+
+<!-- STEP 2 -->
+<div class="step" id="step2">
+  <h2>Co chcesz rozwinąć?</h2>
+  <div class="grid" id="goals"></div>
+  <button class="btn" id="next2" disabled onclick="next()">Dalej</button>
+</div>
+
+<!-- STEP 3 -->
+<div class="step" id="step3">
+  <h2>Twój poziom?</h2>
+  <div class="grid">
+    <div class="card" onclick="select(3,'poczatkujacy',this)">🌱 Początkujący</div>
+    <div class="card" onclick="select(3,'sredni',this)">💪 Średni</div>
+    <div class="card" onclick="select(3,'zaawansowany',this)">🔥 Zaawansowany</div>
+  </div>
+  <button class="btn" id="next3" disabled onclick="finish()">Generuj plan</button>
+</div>
+
+<!-- RESULT -->
+<div class="step" id="result">
+  <h2>🔥 Twój plan</h2>
+  <p id="planText"></p>
+</div>
+
 </div>
 
 <script>
-const state = {
-  step: 0,
-  user: null,
-  answers: {},
-  plan: null,
-  done: []
-};
+let step = 1;
+let answers = {};
 
 const GOALS = {
-  kobieta: ["posladki","brzuch","ramiona","redukcja"],
-  mezczyzna: ["klatka","plecy","nogi","masa"]
-};
-
-const PLANS = {
-  posladki: [
-    "Hip Thrust 4x12",
-    "RDL 4x10",
-    "Wykroki 3x12",
-    "Kickback 3x15"
+  kobieta:[
+    {v:"posladki",t:"🍑 Pośladki"},
+    {v:"brzuch",t:"⚡ Brzuch"},
+    {v:"cale",t:"✨ Całe ciało"},
+    {v:"ramiona",t:"💪 Ramiona"},
+    {v:"redukcja",t:"🔥 Redukcja"},
+    {v:"kondycja",t:"🏃 Kondycja"},
   ],
-  brzuch: [
-    "Plank 4x40s",
-    "Dead Bug",
-    "Russian Twist",
-    "Leg Raises"
-  ],
-  klatka: [
-    "Bench Press 5x5",
-    "Incline DB",
-    "Dipy",
-    "Rozpiętki"
-  ],
-  plecy: [
-    "Podciąganie",
-    "Wiosłowanie",
-    "Face Pull",
-    "Lat Pulldown"
-  ],
-  masa: [
-    "Przysiad",
-    "Martwy ciąg",
-    "Bench Press",
-    "OHP"
-  ],
-  redukcja: [
-    "HIIT 20 min",
-    "Full Body",
-    "Cardio",
-    "Core"
+  mezczyzna:[
+    {v:"klatka",t:"🦁 Klatka"},
+    {v:"plecy",t:"💪 Plecy"},
+    {v:"nogi",t:"🦵 Nogi"},
+    {v:"barki",t:"🔱 Barki"},
+    {v:"masa",t:"⚡ Masa"},
+    {v:"rzezba",t:"🔥 Rzeźba"},
   ]
 };
 
-// ─── LOGIN ───
-function login(){
-  const name = document.getElementById("name").value;
-  if(!name) return alert("Podaj imię");
+function select(s,val,el){
+  answers[s]=val;
 
-  state.user = {name};
-  localStorage.setItem("user", JSON.stringify(state.user));
-  state.step = 1;
-  render();
+  document.querySelectorAll(`#step${s} .card`).forEach(c=>c.classList.remove("active"));
+  el.classList.add("active");
+
+  document.getElementById("next"+s).disabled=false;
+
+  if(s===1) renderGoals();
 }
 
-// ─── SELECT ───
-function select(step,val){
-  state.answers[step]=val;
-  render();
+function renderGoals(){
+  const box=document.getElementById("goals");
+  box.innerHTML="";
+  GOALS[answers[1]].forEach(g=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=g.t;
+    div.onclick=()=>select(2,g.v,div);
+    box.appendChild(div);
+  });
 }
 
-// ─── GENERATE ───
-function generate(){
-  const goal = state.answers[2];
-  const waga = state.answers[3];
+function next(){
+  document.getElementById("step"+step).classList.remove("active");
+  step++;
+  document.getElementById("step"+step).classList.add("active");
 
-  const kcal = Math.round(waga * 30);
-  const exercises = PLANS[goal] || [];
-
-  state.plan = { goal, kcal, exercises };
-  state.done = [];
-
-  localStorage.setItem("plan", JSON.stringify(state.plan));
-  localStorage.setItem("done", JSON.stringify(state.done));
-
-  renderPlan();
+  document.getElementById("bar").style.width=(step*33)+"%";
 }
 
-// ─── CHECKBOX ───
-function toggle(i){
-  if(state.done.includes(i)){
-    state.done = state.done.filter(x => x!==i);
-  } else {
-    state.done.push(i);
-  }
+function finish(){
+  document.getElementById("step"+step).classList.remove("active");
+  document.getElementById("result").classList.add("active");
 
-  localStorage.setItem("done", JSON.stringify(state.done));
-  renderPlan();
-}
+  document.getElementById("bar").style.width="100%";
 
-// ─── PLAN VIEW ───
-function renderPlan(){
-  const app = document.getElementById("app");
-
-  const done = state.done.length;
-  const total = state.plan.exercises.length;
-  const percent = Math.round((done/total)*100);
-
-  app.innerHTML = `
-    <div class="plan">
-      <h2>🔥 Twój plan</h2>
-      <p>${state.user.name}</p>
-      <p>Kcal: ${state.plan.kcal}</p>
-
-      <div class="progressBar">
-        <div class="progressFill" style="width:${percent}%"></div>
-      </div>
-      <p>${percent}% ukończone</p>
-
-      ${state.plan.exercises.map((e,i)=>`
-        <div onclick="toggle(${i})" 
-          style="padding:10px; margin:6px 0; cursor:pointer; border-radius:10px;
-          background:${state.done.includes(i)?"#c8f04522":"#111"}">
-          ${state.done.includes(i)?"✔️":""} ${e}
-        </div>
-      `).join("")}
-
-      <button class="btn primary" onclick="reset()">Nowy plan</button>
-    </div>
+  document.getElementById("planText").innerHTML = `
+    Płeć: ${answers[1]} <br>
+    Cel: ${answers[2]} <br>
+    Poziom: ${answers[3]} <br><br>
+    👉 Tutaj możesz podpiąć swoje PLANS z Reacta i generować pełny plan.
   `;
-}
-
-// ─── RENDER ───
-function render(){
-  const app = document.getElementById("app");
-
-  if(!state.user){
-    app.innerHTML = `
-      <input id="name" placeholder="Imię">
-      <button class="btn primary" onclick="login()">Start</button>
-    `;
-    return;
-  }
-
-  if(state.step===1){
-    app.innerHTML = `
-      <h2>Płeć</h2>
-      <div class="grid">
-        <div class="card" onclick="select(1,'kobieta')">👩</div>
-        <div class="card" onclick="select(1,'mezczyzna')">👨</div>
-      </div>
-      <button class="btn primary" onclick="state.step=2;render()">Dalej</button>
-    `;
-  }
-
-  if(state.step===2){
-    const goals = GOALS[state.answers[1]] || [];
-    app.innerHTML = `
-      <h2>Cel</h2>
-      <div class="grid">
-        ${goals.map(g=>`<div class="card" onclick="select(2,'${g}')">${g}</div>`).join("")}
-      </div>
-      <button class="btn primary" onclick="state.step=3;render()">Dalej</button>
-    `;
-  }
-
-  if(state.step===3){
-    app.innerHTML = `
-      <h2>Waga</h2>
-      <input id="w" placeholder="kg">
-      <button class="btn primary" onclick="state.answers[3]=w.value;generate()">Generuj</button>
-    `;
-  }
-}
-
-// ─── RESET ───
-function reset(){
-  localStorage.removeItem("plan");
-  localStorage.removeItem("done");
-  state.step=1;
-  state.answers={};
-  render();
-}
-
-// ─── INIT ───
-const savedUser = localStorage.getItem("user");
-const savedPlan = localStorage.getItem("plan");
-const savedDone = localStorage.getItem("done");
-
-if(savedUser){
-  state.user = JSON.parse(savedUser);
-}
-
-if(savedPlan){
-  state.plan = JSON.parse(savedPlan);
-  state.done = JSON.parse(savedDone) || [];
-  renderPlan();
-} else {
-  render();
 }
 </script>
 

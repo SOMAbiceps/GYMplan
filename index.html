@@ -3,104 +3,143 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FitPlan AI</title>
+<title>FitPlan</title>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*{margin:0;padding:0;box-sizing:border-box}
 body{
-  font-family:system-ui;
-  background:#0b0b0f;
+  font-family:-apple-system,BlinkMacSystemFont;
+  background:#0c0c0f;
   color:#fff;
-  display:flex;
-  justify-content:center;
 }
 
 .app{
-  width:100%;
-  max-width:420px;
-  padding:20px 16px 80px;
+  max-width:500px;
+  margin:auto;
+  padding:24px 20px 100px;
 }
 
-h1{
-  font-size:28px;
-  font-weight:800;
-  text-align:center;
-}
-
-.sub{
-  text-align:center;
-  color:#777;
-  font-size:13px;
-  margin-bottom:25px;
-}
-
-.progress{
-  height:4px;
-  background:#1a1a1a;
-  border-radius:10px;
-  overflow:hidden;
-  margin-bottom:25px;
-}
-.bar{
-  height:100%;
-  width:33%;
-  background:linear-gradient(90deg,#c8f045,#00ffd5);
-  transition:0.3s;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-
-.card{
-  background:rgba(255,255,255,0.04);
-  border:1px solid #222;
-  border-radius:14px;
-  padding:18px 10px;
-  text-align:center;
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.card:hover{border-color:#c8f045}
-.card.active{
-  border:2px solid #c8f045;
-  background:rgba(200,240,69,0.1);
-}
-
-.icon{font-size:26px;margin-bottom:6px}
-.label{font-weight:600;font-size:13px}
-
-.btn{
-  margin-top:20px;
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:999px;
-  font-weight:700;
-  background:linear-gradient(90deg,#c8f045,#00ffd5);
-  color:#000;
-  cursor:pointer;
-}
-
-.btn:disabled{
-  background:#222;
-  color:#555;
-}
-
-.step{display:none}
-.step.active{display:block}
-
+/* HEADER */
 .header{
   margin-bottom:30px;
 }
+.title{
+  font-size:34px;
+  font-weight:800;
+}
+.subtitle{
+  color:#8a8a8a;
+  margin-top:6px;
+}
 
-.premium{
-  background:linear-gradient(90deg,#c8f045,#00ffd5);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
+/* PROGRESS */
+.progress{
+  height:5px;
+  background:#1c1c22;
+  border-radius:10px;
+  overflow:hidden;
+  margin:25px 0;
+}
+.bar{
+  height:100%;
+  width:20%;
+  background:#4cffc3;
+  transition:.4s;
+}
+
+/* STEPS */
+.step{
+  display:none;
+  animation:fade .35s ease;
+}
+.step.active{display:block}
+
+@keyframes fade{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+/* CARD */
+.card{
+  background:#16161c;
+  border:2px solid transparent;
+  padding:22px 12px;
+  border-radius:18px;
+  text-align:center;
+  cursor:pointer;
+  transition:.2s;
+}
+.card:hover{border-color:#4cffc3}
+.card.active{
+  border-color:#4cffc3;
+  background:#1f2a28;
+}
+
+.icon{font-size:30px;margin-bottom:8px}
+.label{font-size:15px;font-weight:600}
+
+/* BUTTON */
+.btn{
+  width:100%;
+  padding:16px;
+  margin-top:22px;
+  border-radius:14px;
+  border:none;
+  font-weight:700;
+  font-size:15px;
+  background:#4cffc3;
+  color:#000;
+  cursor:pointer;
+}
+.btn:disabled{
+  background:#2a2a2f;
+  color:#555;
+}
+
+/* RESULT */
+.result-card{
+  background:#16161c;
+  border-radius:20px;
+  padding:22px;
+  margin-bottom:14px;
+  border:1px solid #222;
+}
+
+.result-title{
+  font-size:20px;
+  font-weight:700;
+  margin-bottom:6px;
+}
+
+.badge{
+  display:inline-block;
+  background:#4cffc3;
+  color:#000;
+  padding:6px 10px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:700;
+  margin-right:6px;
+}
+
+/* ACCOUNT */
+.account{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#111;
+  border-top:1px solid #222;
+  padding:14px;
+  text-align:center;
+  font-size:13px;
 }
 </style>
 </head>
@@ -110,8 +149,8 @@ h1{
 <div class="app">
 
 <div class="header">
-  <h1>FitPlan <span class="premium">AI</span></h1>
-  <div class="sub">Twój personalny plan treningowy</div>
+  <div class="title">FitPlan</div>
+  <div class="subtitle">Twój plan treningowy AI</div>
 </div>
 
 <div class="progress"><div class="bar" id="bar"></div></div>
@@ -135,52 +174,45 @@ h1{
 
 <!-- STEP 3 -->
 <div class="step" id="step3">
-  <h2>Twój poziom?</h2>
+  <h2>Twój poziom</h2>
   <div class="grid">
-    <div class="card" onclick="select(3,'poczatkujacy',this)">🌱 Początkujący</div>
+    <div class="card" onclick="select(3,'poczatkujacy',this)">🌱 Start</div>
     <div class="card" onclick="select(3,'sredni',this)">💪 Średni</div>
-    <div class="card" onclick="select(3,'zaawansowany',this)">🔥 Zaawansowany</div>
+    <div class="card" onclick="select(3,'pro',this)">🔥 PRO</div>
   </div>
-  <button class="btn" id="next3" disabled onclick="finish()">Generuj plan</button>
+  <button class="btn" id="next3" disabled onclick="finish()">Generuj</button>
 </div>
 
 <!-- RESULT -->
 <div class="step" id="result">
-  <h2>🔥 Twój plan</h2>
-  <p id="planText"></p>
+  <div class="result-card">
+    <div class="result-title">Twój plan</div>
+    <div id="badges"></div>
+  </div>
+
+  <div class="result-card">
+    <div class="result-title">Opis</div>
+    <p id="desc"></p>
+  </div>
 </div>
 
 </div>
+
+<div class="account" id="account"></div>
 
 <script>
-let step = 1;
-let answers = {};
+let step=1;
+let answers={};
 
-const GOALS = {
-  kobieta:[
-    {v:"posladki",t:"🍑 Pośladki"},
-    {v:"brzuch",t:"⚡ Brzuch"},
-    {v:"cale",t:"✨ Całe ciało"},
-    {v:"ramiona",t:"💪 Ramiona"},
-    {v:"redukcja",t:"🔥 Redukcja"},
-    {v:"kondycja",t:"🏃 Kondycja"},
-  ],
-  mezczyzna:[
-    {v:"klatka",t:"🦁 Klatka"},
-    {v:"plecy",t:"💪 Plecy"},
-    {v:"nogi",t:"🦵 Nogi"},
-    {v:"barki",t:"🔱 Barki"},
-    {v:"masa",t:"⚡ Masa"},
-    {v:"rzezba",t:"🔥 Rzeźba"},
-  ]
+const GOALS={
+kobieta:["🍑 Pośladki","⚡ Brzuch","✨ Całe ciało","💪 Ramiona"],
+mezczyzna:["🦁 Klatka","💪 Plecy","🦵 Nogi","🔱 Barki"]
 };
 
 function select(s,val,el){
   answers[s]=val;
-
   document.querySelectorAll(`#step${s} .card`).forEach(c=>c.classList.remove("active"));
   el.classList.add("active");
-
   document.getElementById("next"+s).disabled=false;
 
   if(s===1) renderGoals();
@@ -192,8 +224,8 @@ function renderGoals(){
   GOALS[answers[1]].forEach(g=>{
     const div=document.createElement("div");
     div.className="card";
-    div.innerHTML=g.t;
-    div.onclick=()=>select(2,g.v,div);
+    div.innerHTML=g;
+    div.onclick=()=>select(2,g,div);
     box.appendChild(div);
   });
 }
@@ -202,23 +234,36 @@ function next(){
   document.getElementById("step"+step).classList.remove("active");
   step++;
   document.getElementById("step"+step).classList.add("active");
-
   document.getElementById("bar").style.width=(step*33)+"%";
 }
 
 function finish(){
+  localStorage.setItem("fitplan",JSON.stringify(answers));
+
   document.getElementById("step"+step).classList.remove("active");
   document.getElementById("result").classList.add("active");
 
-  document.getElementById("bar").style.width="100%";
-
-  document.getElementById("planText").innerHTML = `
-    Płeć: ${answers[1]} <br>
-    Cel: ${answers[2]} <br>
-    Poziom: ${answers[3]} <br><br>
-    👉 Tutaj możesz podpiąć swoje PLANS z Reacta i generować pełny plan.
+  document.getElementById("badges").innerHTML=`
+    <span class="badge">${answers[1]}</span>
+    <span class="badge">${answers[2]}</span>
+    <span class="badge">${answers[3]}</span>
   `;
+
+  document.getElementById("desc").innerText="Plan dopasowany pod Twoje cele. Kolejny krok: wdrożenie treningu i progres.";
+  updateAccount();
 }
+
+function updateAccount(){
+  const data=JSON.parse(localStorage.getItem("fitplan"));
+  if(!data){
+    document.getElementById("account").innerText="Nie zapisano planu";
+    return;
+  }
+  document.getElementById("account").innerText=
+    "Zapisany plan: "+data[2]+" | "+data[3];
+}
+
+updateAccount();
 </script>
 
 </body>

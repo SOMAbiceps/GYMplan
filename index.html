@@ -295,16 +295,16 @@ input:-webkit-autofill{-webkit-box-shadow:0 0 0 100px var(--s3) inset!important;
     <div class="ats"><button class="at on" onclick="atab('l')">Logowanie</button><button class="at" onclick="atab('r')">Rejestracja</button></div>
     <div class="msg e" id="lerr"></div>
     <div id="fL">
-      <div class="fld"><label>Email <em>wymagany</em></label><input type="email" id="le" placeholder="jan@mail.pl" autocomplete="email"></div>
-      <div class="fld"><label>Hasło <em>min. 10 znaków + znak spec.</em></label><input type="password" id="lp" placeholder="••••••••••" autocomplete="current-password"></div>
+      <div class="fld"><label>Email</label><input type="email" id="le" placeholder="jan@gmail.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="fld"><label>Hasło</label><input type="password" id="lp" placeholder="••••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <button class="btn ba bdf bf" onclick="doLogin()">Zaloguj się →</button>
 
 ```
 </div>
 <div id="fR" style="display:none">
-  <div class="fld"><label>Imię</label><input type="text" id="rn" placeholder="Jan" autocomplete="given-name"></div>
-  <div class="fld"><label>Email <em>wymagany</em></label><input type="email" id="re" placeholder="jan@mail.pl" autocomplete="email"></div>
-  <div class="fld"><label>Hasło <em>min. 10 znaków + znak specjalny</em></label><input type="password" id="rp" placeholder="••••••••••" autocomplete="new-password"></div>
+  <div class="fld"><label>Imię</label><input type="text" id="rn" placeholder="Jan" autocomplete="given-name" onkeydown="if(event.key==='Enter')doReg()"></div>
+  <div class="fld"><label>Email <em>wymagany</em></label><input type="email" id="re" placeholder="jan@gmail.com" autocomplete="email" onkeydown="if(event.key==='Enter')doReg()"></div>
+  <div class="fld"><label>Hasło</label><input type="password" id="rp" placeholder="••••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')doReg()"></div>
   <button class="btn ba bdf bf" onclick="doReg()">Utwórz konto →</button>
 </div>
 ```
@@ -425,6 +425,7 @@ input:-webkit-autofill{-webkit-box-shadow:0 0 0 100px var(--s3) inset!important;
     </div>
     <div class="sssec">
       <div class="sstit">Aplikacja</div>
+      <div class="ssr"><div class="ssrl"><div class="ssrt">Tryb jasny ☀️</div><div class="ssrb">Przełącz ciemny / jasny</div></div><button class="tgl" id="tg-light" onclick="togLight()"></button></div>
       <div class="ssr"><div class="ssrl"><div class="ssrt">Dźwięki</div><div class="ssrb">Efekty dźwiękowe</div></div><button class="tgl" id="tg-snd" onclick="togSet('sound')"></button></div>
       <div class="ssr"><div class="ssrl"><div class="ssrt">Wibracje</div><div class="ssrb">Haptyczne powiadomienia</div></div><button class="tgl on" id="tg-vib" onclick="togSet('vib')"></button></div>
       <div class="ssr"><div class="ssrl"><div class="ssrt">Powiadomienia PR</div><div class="ssrb">Pokaż nowe rekordy</div></div><button class="tgl on" id="tg-pr" onclick="togSet('prNotif')"></button></div>
@@ -434,6 +435,7 @@ input:-webkit-autofill{-webkit-box-shadow:0 0 0 100px var(--s3) inset!important;
       <div class="thg" id="thg"></div>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+      <button class="btn ba bdf bf" id="btn-install" onclick="installApp()" style="display:none">📲 Zainstaluj aplikację</button>
       <button class="btn bdgr bf" onclick="logout()">Wyloguj się</button>
       <button class="btn bdgr bf" style="opacity:.6" onclick="delAcc()">Usuń konto</button>
     </div>
@@ -560,14 +562,18 @@ if(window.matchMedia('(pointer:fine)').matches){
 function bH(r){r.querySelectorAll('button,a,.wcard,.scard,.popt,.ssr,.cnbtn').forEach(el=>{el.addEventListener('mouseenter',()=>document.body.classList.add('hov'));el.addEventListener('mouseleave',()=>document.body.classList.remove('hov'));});}
 bH(document);
 
-/* AUDIO */
-let Ax=null;
-function gAx(){if(!Ax)Ax=new(window.AudioContext||window.webkitAudioContext)();return Ax;}
-function tone(f,d,t='sine',v=.25){try{const a=gAx(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+d);o.start();o.stop(a.currentTime+d);}catch(e){}}
+/* AUDIO - unlock required by browsers */
+let Ax=null,audioOK=false;
+function unlockAudio(){if(audioOK)return;try{Ax=new(window.AudioContext||window.webkitAudioContext)();if(Ax.state==='suspended')Ax.resume();audioOK=true;}catch(e){}}
+document.addEventListener('click',unlockAudio,{passive:true});
+document.addEventListener('touchstart',unlockAudio,{passive:true});
+function tone(f,d,t='sine',v=.22){if(!audioOK||!Ax)return;try{if(Ax.state==='suspended')Ax.resume();const o=Ax.createOscillator(),g=Ax.createGain();o.connect(g);g.connect(Ax.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,Ax.currentTime);g.gain.exponentialRampToValueAtTime(.001,Ax.currentTime+d);o.start(Ax.currentTime);o.stop(Ax.currentTime+d);}catch(e){}}
 function sfxStart(){if(!gS('sound'))return;tone(440,.08,'square',.15);setTimeout(()=>tone(660,.1,'square',.18),80);setTimeout(()=>tone(880,.15,'square',.22),160);}
 function sfxDone(){if(!gS('sound'))return;[440,550,660,880].forEach((f,i)=>setTimeout(()=>tone(f,.15,'sine',.18),i*80));}
 function sfxSet(){if(!gS('sound'))return;tone(660,.06,'sine',.12);}
-function sfxTimer(){if(!gS('sound'))return;tone(880,.1,'sine',.2);setTimeout(()=>tone(880,.1,'sine',.2),150);}
+function sfxTimer(){if(!gS('sound'))return;tone(880,.1,'sine',.2);setTimeout(()=>tone(1100,.1,'sine',.2),150);}
+function togLight(){const v=!gS('light');setS('light',v);const el=document.getElementById('tg-light');if(el)el.classList.toggle('on',v);applyTheme(gS('theme'));}
+function togSnd(){unlockAudio();const v=!gS('sound');setS('sound',v);const el=document.getElementById('tg-snd');if(el)el.classList.toggle('on',v);if(v)setTimeout(()=>tone(660,.08,'sine',.15),80);}
 
 /* DB */
 const K='fp_v3';
@@ -694,7 +700,7 @@ const PL={
 };
 function allPlans(){return[...PL.fb,...PL.ppl,...PL.ul,...PL.cel]}
 function plansForD(d){return d==='2'?PL.fb:d==='3'?PL.ppl:PL.ul}
-const THEMES=[{k:"lime",l:"Lime",c:"#d4ff00",tc:"#000",cls:""},{k:"blue",l:"Blue",c:"#00aaff",tc:"#000",cls:"tb"},{k:"green",l:"Green",c:"#00e676",tc:"#000",cls:"tg"},{k:"red",l:"Red",c:"#ff2d55",tc:"#fff",cls:"tr"},{k:"purple",l:"Purple",c:"#b388ff",tc:"#000",cls:"tp"},{k:"orange",l:"Orange",c:"#ff6b00",tc:"#fff",cls:"to"},{k:"light",l:"Jasny 2600Fe0f",c:"#e8e8e8",tc:"#111",cls:"light"}];
+const THEMES=[{k:"lime",l:"Lime",c:"#d4ff00",tc:"#000",cls:""},{k:"blue",l:"Blue",c:"#00aaff",tc:"#000",cls:"tb"},{k:"green",l:"Green",c:"#00e676",tc:"#000",cls:"tg"},{k:"red",l:"Red",c:"#ff2d55",tc:"#fff",cls:"tr"},{k:"purple",l:"Purple",c:"#b388ff",tc:"#000",cls:"tp"},{k:"orange",l:"Orange",c:"#ff6b00",tc:"#fff",cls:"to"}];
 
 /* EXERCISE ILLUSTRATIONS — simple SVG stick figures per muscle group */
 const EX_ICONS={
@@ -748,8 +754,8 @@ function getExIcon(name){return EX_ICONS[name]||'<svg viewBox="0 0 44 44" fill="
 /* SETTINGS */
 function gS(k){const def={sound:false,vib:true,prNotif:true,theme:'lime',rest:90};return U?.settings?.[k]??def[k]}
 function setS(k,v){if(!U.settings)U.settings={};U.settings[k]=v;sU(U)}
-function togSet(k){const v=!gS(k);setS(k,v);const t=document.getElementById('tg-'+k.replace('prNotif','pr'));if(t)t.classList.toggle('on',v);}
-function applyTheme(k){document.body.className=document.body.className.replace(/\b(tb|tg|tr|tp|to|light)\b/g,'').trim().replace(/\s+/g,' ');const th=THEMES.find(t=>t.k===k);if(th&&th.cls)document.body.classList.add(th.cls);if(k==='light')document.body.classList.add('light');}
+function togSet(k){const v=!gS(k);setS(k,v);const el=document.getElementById(k==='prNotif'?'tg-pr':k==='sound'?'tg-snd':'tg-vib');if(el)el.classList.toggle('on',v);}
+function applyTheme(k){document.body.className=document.body.className.replace(/\b(tb|tg|tr|tp|to|light)\b/g,'').trim().replace(/\s+/g,' ');const th=THEMES.find(t=>t.k===k);if(th&&th.cls)document.body.classList.add(th.cls);document.body.classList.toggle('light',!!gS('light'));}
 
 /* SCREENS */
 function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));const el=document.getElementById('s'+id);if(el){el.classList.add('on');setTimeout(()=>bH(el),60);}}
@@ -816,7 +822,8 @@ function loadApp(){
   document.getElementById('set-body').textContent=(U.height||'–')+' cm / '+(U.weight||'–')+' kg';
   document.getElementById('set-plan').textContent=plLabel();
   document.getElementById('set-rest').textContent=gS('rest')+' sekund';
-  ['sound','vib','prNotif'].forEach(k=>{const id=k==='prNotif'?'tg-pr':'tg-'+k.replace('prNotif','pr');const el=document.getElementById(k==='prNotif'?'tg-pr':k==='sound'?'tg-snd':'tg-vib');if(el)el.classList.toggle('on',gS(k));});
+  ['sound','vib','prNotif'].forEach(k=>{const el=document.getElementById(k==='prNotif'?'tg-pr':k==='sound'?'tg-snd':'tg-vib');if(el)el.classList.toggle('on',gS(k));});
+  const tgL=document.getElementById('tg-light');if(tgL)tgL.classList.toggle('on',gS('light'));
   buildThemeGrid();buildPlanCards();
   // Admin
   // Admin tab - always clean up first, then add if needed
@@ -995,12 +1002,7 @@ function buildStats(){
 }
 
 /* SETTINGS */
-function buildThemeGrid(){
-  const g=document.getElementById('thg');g.innerHTML='';
-  g.style.gridTemplateColumns='repeat(4,1fr)';
-  const cur=gS('theme')||'lime';
-  THEMES.forEach(t=>{if(!t.k)return;const b=document.createElement('button');b.className='thb'+(cur===t.k?' on':'');b.style.background=t.c;b.style.color=t.tc;b.style.border=t.k==='light'?'2px solid #ccc':'2px solid transparent';b.innerHTML=`<span style="font-size:.72rem;font-weight:700;letter-spacing:.04em">${t.l}</span>`;b.onclick=()=>{setS('theme',t.k);applyTheme(t.k);buildThemeGrid();};g.appendChild(b);bH(b);});
-}
+function buildThemeGrid(){const g=document.getElementById('thg');if(!g)return;g.innerHTML='';g.style.gridTemplateColumns='repeat(3,1fr)';const cur=gS('theme')||'lime';THEMES.forEach(t=>{const b=document.createElement('button');b.className='thb'+(cur===t.k?' on':'');b.style.cssText='background:'+t.c+';color:'+t.tc+';border:2px solid '+(cur===t.k?'#fff':'transparent');b.innerHTML='<span style="font-size:.78rem;font-weight:700;letter-spacing:.05em">'+t.l+'</span>';b.onclick=()=>{setS('theme',t.k);applyTheme(t.k);buildThemeGrid();};g.appendChild(b);bH(b);});}
 function saveName(){const v=document.getElementById('inp-nm').value.trim();if(!v)return;U.name=v;sU(U);document.getElementById('set-nm').textContent=v;document.getElementById('hnm').textContent=v;document.getElementById('av').textContent=v.slice(0,2).toUpperCase();closeMo('mo-nm');}
 function saveEmail(){const v=document.getElementById('inp-em').value.trim().toLowerCase();if(!isEmail(v)){showMsg('em-err','Podaj prawidłowy email.');return;}if(gU(v)&&v!==U.email){showMsg('em-err','Ten email jest już zajęty.');return;}const d=gDB();delete d.u[U.email];if(d.l[U.email]){d.l[v]=d.l[U.email];delete d.l[U.email];}U.email=v;d.u[v]=U;sDB(d);document.getElementById('set-em').textContent=v;localStorage.setItem('fp_cur',v);closeMo('mo-em');}
 function savePass(){const op=document.getElementById('inp-op').value;const np=document.getElementById('inp-np').value;if(op!==U.pass){showMsg('pw-err','Stare hasło jest nieprawidłowe.');return;}if(!isPass(np)){showMsg('pw-err','Nowe hasło musi mieć minimum 10 znaków i znak specjalny.');return;}U.pass=np;sU(U);closeMo('mo-pw');}
@@ -1021,6 +1023,11 @@ function buildAdmin(){
 function openMo(id){document.getElementById(id).classList.add('on');setTimeout(()=>bH(document.getElementById(id)),50);}
 function closeMo(id){document.getElementById(id).classList.remove('on');}
 function closeMoOv(e,id){if(e.target===document.getElementById(id))closeMo(id);}
+
+let deferredInstall=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;const b=document.getElementById('btn-install');if(b)b.style.display='flex';});
+window.addEventListener('appinstalled',()=>{deferredInstall=null;const b=document.getElementById('btn-install');if(b)b.style.display='none';});
+function installApp(){if(deferredInstall){deferredInstall.prompt();deferredInstall.userChoice.then(()=>{deferredInstall=null;});}else{alert('iOS Safari: Udostępnij → Dodaj do ekranu głównego\n\nChrome: Menu → Zainstaluj aplikację');}}
 
 /* INIT */
 (()=>{const saved=localStorage.getItem('fp_cur');if(saved){const u=gU(saved);if(u){U=u;afterAuth();return;}}show('L');})();

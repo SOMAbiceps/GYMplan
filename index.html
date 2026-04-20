@@ -4,7 +4,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>FITPLAN</title>
+<meta name="theme-color" content="#080808">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FitPlan">
+<link rel="manifest" id="mfst">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23080808'/%3E%3Ctext y='.9em' font-size='72' x='10'%3E%F0%9F%92%AA%3C/text%3E%3C/svg%3E">
+<title>FitPlan</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -594,107 +600,89 @@ let calY=new Date().getFullYear(),calM=new Date().getMonth(),selPlan=null;
 /* WORKOUT DB */
 const PL={
   fb:[
-    {id:'fb-a',n:'Full Body A',ic:'⚡',bg:'rgba(0,170,255,.15)',days:'Dzień 1',meta:'Całe ciało · 6 ćwiczeń · ~55 min',rest:90,exs:[
-      {n:'Przysiad ze sztangą',s:4,r:'8–10',t:'Nogi i pośladki – priorytet każdego treningu.'},
-      {n:'Wyciskanie sztangi na ławce',s:4,r:'8–10',t:'Łopatki ściągnięte przez cały czas.'},
-      {n:'Wiosłowanie hantlem jednoręcz',s:3,r:'10/rękę',t:'Łokieć wysoko, pełen zakres.'},
-      {n:'Hip Thrust z gumą',s:3,r:'12',t:'Ściskaj pośladki mocno na górze.'},
-      {n:'OHP – wyciskanie stojąc',s:3,r:'10',t:'Rdzeń napięty przez cały czas.'},
-      {n:'Plank',s:3,r:'45 sek',t:'Biodra w linii, oddychaj równomiernie.'},
+    {id:'fb-a',n:'Full Body A',ic:'⚡',bg:'rgba(0,170,255,.15)',days:'Dzień 1',meta:'4 ćwiczenia · ~45 min',rest:90,exs:[
+      {n:'Przysiad ze sztangą',s:4,r:'6–10',t:'Głęboko poniżej równoległości. Kolana nad stopami.'},
+      {n:'Wyciskanie sztangi na ławce',s:3,r:'8–12',t:'Łopatki ściągnięte i cofnięte. Pełen zakres.'},
+      {n:'Wiosłowanie hantlem jednoręcz',s:3,r:'10–12',t:'Duży stretch na dole. Łokieć wysoko na górze.'},
+      {n:'Hip Thrust ze sztangą',s:3,r:'12–15',t:'Ściskaj pośladki 1 sek na górze. Plecy na ławce.'},
     ]},
-    {id:'fb-b',n:'Full Body B',ic:'🔥',bg:'rgba(255,107,0,.15)',days:'Dzień 2',meta:'Całe ciało · 6 ćwiczeń · ~55 min',rest:90,exs:[
-      {n:'Martwy ciąg rumuński',s:4,r:'8–10',t:'Biodra do tyłu, plecy proste.'},
-      {n:'Wyciskanie hantli – ławka skośna',s:4,r:'10–12',t:'Góra klatki – pochylenie 30°.'},
-      {n:'Podciąganie na drążku / z gumą',s:3,r:'6–8',t:'Pełny zakres ruchu.'},
-      {n:'Bułgarski przysiad z hantlami',s:3,r:'10/nogę',t:'Tylna noga na ławce.'},
-      {n:'Unoszenie hantli bokiem',s:3,r:'15',t:'Lekki ciężar, kontroluj każde powt.'},
-      {n:'Russian twist',s:3,r:'15/stronę',t:'Stopy uniesione, rotacja z kontrolą.'},
+    {id:'fb-b',n:'Full Body B',ic:'🔥',bg:'rgba(255,107,0,.15)',days:'Dzień 2',meta:'4 ćwiczenia · ~45 min',rest:90,exs:[
+      {n:'Martwy ciąg rumuński',s:4,r:'8–10',t:'Biodra do tyłu. Czujesz stretch w bicepsie udowym.'},
+      {n:'OHP – wyciskanie stojąc',s:3,r:'8–10',t:'Rdzeń napięty. Bary znad głowy. Nie wyginaj lędźwi.'},
+      {n:'Podciąganie na drążku',s:3,r:'6–10',t:'Pełen zakres — stretch na dole, łopatki razem na górze.'},
+      {n:'Bułgarski przysiad z hantlami',s:3,r:'10–12',t:'Tylna noga na ławce. Eliminuje dysbalanse.'},
     ]},
   ],
   ppl:[
-    {id:'pull',n:'Pull Day',ic:'🔵',bg:'rgba(0,170,255,.15)',days:'Dzień 1',meta:'Plecy + Biceps · 5 ćwiczeń · ~55 min',rest:90,exs:[
-      {n:'Podciąganie na drążku',s:4,r:'6–8',t:'Nachwytem. Łopatki ściągaj w dół i razem.'},
-      {n:'Wiosłowanie sztangą w opadzie',s:4,r:'8–10',t:'Plecy równolegle do podłogi.'},
-      {n:'Ściąganie drążka do klatki',s:3,r:'10–12',t:'Szeroki chwyt. Ściskaj łopatki na dole.'},
-      {n:'Wiosłowanie hantlem jednoręcz',s:3,r:'10/rękę',t:'Łokieć wysoko, pełen zakres.'},
-      {n:'Uginanie bicepsów ze sztangą',s:3,r:'10–12',t:'Łokcie przy ciele przez cały czas.'},
+    {id:'pull',n:'Pull Day',ic:'🔵',bg:'rgba(0,170,255,.15)',days:'Dzień 1 — Plecy & Biceps',meta:'4 ćwiczenia · ~45 min',rest:90,exs:[
+      {n:'Podciąganie na drążku',s:4,r:'6–10',t:'Nachwytem. Pełen stretch na dole. Łopatki razem na górze.'},
+      {n:'Wiosłowanie sztangą w opadzie',s:3,r:'8–10',t:'Tułów ~45°. Ciągnij do dolnej klatki. Stretch na dole.'},
+      {n:'Ściąganie drążka do klatki',s:3,r:'10–12',t:'Szeroki chwyt. Łopatki razem w dole. Łokcie prosto w dół.'},
+      {n:'Uginanie bicepsów ze sztangą',s:3,r:'10–12',t:'Łokcie przy ciele. Supinacja na górze. Wolne opuszczanie 3s.'},
     ]},
-    {id:'push',n:'Push Day',ic:'🟠',bg:'rgba(255,107,0,.15)',days:'Dzień 2',meta:'Klatka + Barki + Triceps · 5 ćwiczeń · ~55 min',rest:90,exs:[
-      {n:'Wyciskanie sztangi na ławce',s:4,r:'6–8',t:'Łopatki ściągnięte. Ciężar nad nasadą dłoni.'},
-      {n:'OHP – wyciskanie stojąc',s:4,r:'8–10',t:'Rdzeń napięty. Nie wyginaj kręgosłupa.'},
-      {n:'Rozpiętki hantlami na ławce',s:3,r:'12',t:'Lekki łuk w łokciach. Pełen zakres.'},
-      {n:'Unoszenie hantli bokiem',s:3,r:'15',t:'Lekki ciężar, kontroluj każde powtórzenie.'},
-      {n:'Prostowanie ramion na lince',s:3,r:'12–15',t:'Łokcie przy ciele. Pełne wyprostowanie.'},
+    {id:'push',n:'Push Day',ic:'🟠',bg:'rgba(255,107,0,.15)',days:'Dzień 2 — Klatka & Barki',meta:'4 ćwiczenia · ~45 min',rest:90,exs:[
+      {n:'Wyciskanie sztangi na ławce',s:4,r:'6–10',t:'Łopatki ściągnięte i cofnięte. Dotknij klatki sztangą.'},
+      {n:'OHP – wyciskanie stojąc',s:3,r:'8–10',t:'Stojąc. Bary znad głowy. Rdzeń napięty.'},
+      {n:'Wyciskanie hantli – ławka skośna',s:3,r:'10–12',t:'30° pochylenia. Góra klatki i przedni bark.'},
+      {n:'Unoszenie hantli bokiem',s:3,r:'13–15',t:'Minimalne bujanie. Czuj boczną głowę barku.'},
     ]},
-    {id:'legs',n:'Leg Day',ic:'🟡',bg:'rgba(212,255,0,.1)',days:'Dzień 3',meta:'Nogi + Pośladki · 5 ćwiczeń · ~60 min',rest:120,exs:[
-      {n:'Przysiad ze sztangą',s:4,r:'6–8',t:'Kolana nad stopami. Pięty na podłodze.'},
-      {n:'Leg Press',s:4,r:'10–12',t:'Stopy szeroko i wysoko na platformie.'},
-      {n:'Martwy ciąg rumuński',s:3,r:'10–12',t:'Biodra do tyłu. Plecy proste.'},
-      {n:'Hip Thrust ze sztangą',s:4,r:'12',t:'Plecy na ławce. Ściskaj pośladki na górze.'},
-      {n:'Odwodzenie nóg w maszynie',s:3,r:'15',t:'Powolne tempo. Czuj zewnętrzny pośladek.'},
+    {id:'legs',n:'Leg Day',ic:'🟡',bg:'rgba(48,209,88,.15)',days:'Dzień 3 — Nogi & Pośladki',meta:'4 ćwiczenia · ~50 min',rest:120,exs:[
+      {n:'Przysiad ze sztangą',s:4,r:'6–10',t:'Głęboki przysiad. Pełen zakres. Podstawa hipertrofii nóg.'},
+      {n:'Hip Thrust ze sztangą',s:4,r:'10–15',t:'Ściskaj pośladki 1 sek. Najlepsze ćwiczenie na pośladki.'},
+      {n:'Leg Press',s:3,r:'10–15',t:'Stopy wysoko i szeroko. Pełen zakres. Nie blokuj kolan.'},
+      {n:'Curl nóg w maszynie',s:3,r:'10–15',t:'Tylne udo. Pełen stretch. Powolne opuszczanie.'},
     ]},
   ],
   ul:[
-    {id:'ua',n:'Upper A – Siła',ic:'💪',bg:'rgba(0,170,255,.12)',days:'Dzień 1 & 3',meta:'Górna partia · Siłowo · 5 ćwiczeń · ~55 min',rest:90,exs:[
-      {n:'Wyciskanie sztangi na ławce',s:4,r:'5',t:'Ciężka seria. Technika na pierwszym miejscu.'},
-      {n:'Wiosłowanie sztangą',s:4,r:'5',t:'Dopełnienie wyciskania.'},
-      {n:'OHP – wyciskanie nad głowę',s:3,r:'8',t:'Rdzeń napięty przez cały czas.'},
-      {n:'Podciąganie na drążku',s:3,r:'max',t:'Każde powtórzenie z pełnym zakresem.'},
-      {n:'Izolacja biceps / triceps',s:3,r:'10',t:'Naprzemiennie co trening.'},
+    {id:'ua',n:'Upper A — Siła',ic:'💪',bg:'rgba(0,170,255,.12)',days:'Dzień 1 & 3',meta:'4 ćwiczenia · ~50 min',rest:90,exs:[
+      {n:'Wyciskanie sztangi na ławce',s:4,r:'5–8',t:'Ciężka praca. Łopatki ściągnięte. Technika ponad ciężar.'},
+      {n:'Podciąganie na drążku',s:4,r:'5–8',t:'Pełen zakres. Najlepsze na szerokość pleców.'},
+      {n:'OHP – wyciskanie stojąc',s:3,r:'8–10',t:'Stojąc. Angażuje barki i triceps jednocześnie.'},
+      {n:'Wiosłowanie hantlem jednoręcz',s:3,r:'10–12',t:'Grubość pleców. Łokieć blisko ciała.'},
     ]},
-    {id:'ub',n:'Upper B – Objętość',ic:'💪',bg:'rgba(167,139,250,.15)',days:'Dzień 1 & 3 (war.)',meta:'Górna partia · Objętość · 5 ćwiczeń · ~55 min',rest:75,exs:[
-      {n:'Wyciskanie hantli – ławka skośna',s:4,r:'10–12',t:'Góra klatki – pochylenie 30°.'},
-      {n:'Ściąganie drążka szerokim chwytem',s:4,r:'10–12',t:'Łopatki razem w dole ruchu.'},
-      {n:'Rozpiętki na maszynie',s:3,r:'15',t:'Ściskaj klatkę na końcu ruchu.'},
-      {n:'Odwrotne rozpiętki w opadzie',s:3,r:'15',t:'Tylna głowa barku.'},
-      {n:'Superset: Curle + Triceps linka',s:3,r:'12 każde',t:'Bez przerwy między ćwiczeniami.'},
+    {id:'ub',n:'Upper B — Objętość',ic:'💪',bg:'rgba(167,139,250,.15)',days:'Dzień 1 & 3 (B)',meta:'4 ćwiczenia · ~45 min',rest:75,exs:[
+      {n:'Wyciskanie hantli – ławka skośna',s:4,r:'10–12',t:'30°. Góra klatki. Pełen zakres. Wolne opuszczanie.'},
+      {n:'Ściąganie drążka do klatki',s:4,r:'10–12',t:'Szeroki chwyt. Łopatki razem w dole ruchu.'},
+      {n:'Unoszenie hantli bokiem',s:3,r:'13–15',t:'Kluczowe dla szerokości sylwetki.'},
+      {n:'Odwrotne rozpiętki w opadzie',s:3,r:'15–20',t:'Tylna głowa barku. Lekki ciężar.'},
     ]},
-    {id:'la',n:'Lower A – Przysiad',ic:'🦵',bg:'rgba(167,139,250,.12)',days:'Dzień 2 & 4',meta:'Dolna partia · Przysiad · 5 ćwiczeń · ~60 min',rest:120,exs:[
-      {n:'Przysiad ze sztangą',s:5,r:'5',t:'Absolutny priorytet dnia.'},
-      {n:'Bułgarski przysiad z hantlami',s:3,r:'10/nogę',t:'Tylna noga na ławce.'},
-      {n:'Leg Press',s:3,r:'12',t:'Uzupełnienie przysiadu.'},
-      {n:'Hip Thrust',s:4,r:'12',t:'Pośladki – nie pomijaj!'},
-      {n:'Wspięcia na palce stojąc',s:4,r:'15',t:'3 sekundy opuszczania.'},
+    {id:'la',n:'Lower A — Przysiad',ic:'🦵',bg:'rgba(48,209,88,.15)',days:'Dzień 2 & 4',meta:'4 ćwiczenia · ~55 min',rest:120,exs:[
+      {n:'Przysiad ze sztangą',s:4,r:'6–10',t:'Główne ćwiczenie dnia. Głęboko. Kolana nie w środek.'},
+      {n:'Hip Thrust ze sztangą',s:4,r:'12–15',t:'Pośladki — największy mięsień. Nie pomijaj.'},
+      {n:'Bułgarski przysiad z hantlami',s:3,r:'10–12',t:'Eliminuje dysbalanse. Tylna noga na ławce.'},
+      {n:'Leg Press',s:3,r:'12–15',t:'Więcej objętości dla czworogłowego.'},
     ]},
-    {id:'lb',n:'Lower B – Martwy',ic:'🦵',bg:'rgba(255,45,85,.1)',days:'Dzień 2 & 4 (war.)',meta:'Dolna partia · Martwy ciąg · 5 ćwiczeń · ~60 min',rest:120,exs:[
-      {n:'Martwy ciąg klasyczny',s:4,r:'5',t:'Plecy proste. Ciężar blisko ciała.'},
-      {n:'Martwy ciąg rumuński',s:3,r:'10',t:'Tylne udo i pośladki.'},
-      {n:'Curl nóg w maszynie',s:4,r:'12',t:'Tylne udo.'},
-      {n:'Wykroki kroczące z hantlami',s:3,r:'12/nogę',t:'Duży krok. Kolano nie za stopę.'},
-      {n:'Odwodzenie nóg w maszynie',s:3,r:'15',t:'Zewnętrzna głowa pośladka.'},
+    {id:'lb',n:'Lower B — Martwy',ic:'🦵',bg:'rgba(255,45,85,.1)',days:'Dzień 2 & 4 (B)',meta:'4 ćwiczenia · ~55 min',rest:120,exs:[
+      {n:'Martwy ciąg rumuński',s:4,r:'8–10',t:'Tylne udo i pośladki. Biodra do tyłu. Plecy neutralne.'},
+      {n:'Curl nóg w maszynie',s:4,r:'10–15',t:'Pełen stretch. Najlepsza izolacja ścięgien udowych.'},
+      {n:'Wykroki kroczące z hantlami',s:3,r:'10–12',t:'Krok do przodu. Kolano nie wychodzi za stopę.'},
+      {n:'Wspięcia na palce stojąc',s:4,r:'12–15',t:'Łydki potrzebują dużo objętości. Pełen zakres.'},
     ]},
   ],
   cel:[
-    {id:'pos',n:'Pośladki & Uda',ic:'🍑',bg:'rgba(255,45,85,.1)',meta:'Kształt · 6 ćwiczeń · ~55 min',rest:75,exs:[
-      {n:'Hip Thrust ze sztangą',s:4,r:'10–12',t:'Fundament. Ściskaj pośladki na górze.'},
-      {n:'Przysiad sumo z hantlem',s:4,r:'12–15',t:'Szeroki rozstaw stóp.'},
-      {n:'Martwy ciąg rumuński',s:3,r:'12',t:'Tylne udo i dolna część pośladka.'},
-      {n:'Leg Press (szerokie ustawienie)',s:3,r:'15',t:'Stopy wysoko i szeroko na platformie.'},
-      {n:'Odwodzenie nóg w maszynie',s:3,r:'15',t:'Powolne tempo.'},
-      {n:'Glute Kickback z gumą',s:3,r:'12/nogę',t:'Ściskaj pośladek mocno na końcu.'},
+    {id:'pos',n:'Pośladki & Uda',ic:'🍑',bg:'rgba(255,45,85,.1)',meta:'4 ćwiczenia · ~45 min',rest:75,exs:[
+      {n:'Hip Thrust ze sztangą',s:4,r:'10–15',t:'Najlepsze na pośladki. Ściskaj 1 sek na górze.'},
+      {n:'Przysiad sumo z hantlem',s:4,r:'12–15',t:'Szeroki rozstaw. Wewnętrzna część uda.'},
+      {n:'Bułgarski przysiad z hantlami',s:3,r:'10–12',t:'Pośladek nogi przedniej. Tylna noga na ławce.'},
+      {n:'Odwodzenie nóg w maszynie',s:3,r:'15–20',t:'Zewnętrzny pośladek. Powolne opuszczanie.'},
     ]},
-    {id:'ca',n:'Całe Ciało',ic:'⚡',bg:'rgba(0,170,255,.1)',meta:'Full Body · 6 ćwiczeń · ~55 min',rest:75,exs:[
-      {n:'Goblet Squat z hantlem',s:4,r:'12',t:'Hantel przy klatce. Kolana na zewnątrz.'},
-      {n:'Wiosłowanie hantlem jednoręcz',s:3,r:'12/rękę',t:'Łokieć wysoko. Pełen zakres.'},
-      {n:'Hip Thrust z gumą',s:4,r:'15',t:'Guma powyżej kolan.'},
-      {n:'Wyciskanie hantli nad głowę',s:3,r:'12',t:'Nie przeprostowuj łokci na górze.'},
-      {n:'Martwy ciąg rumuński',s:3,r:'12',t:'Kontroluj opuszczanie.'},
-      {n:'Plank',s:3,r:'45 sek',t:'Biodra nie opadają.'},
+    {id:'ca',n:'Całe Ciało',ic:'⚡',bg:'rgba(0,170,255,.1)',meta:'4 ćwiczenia · ~45 min',rest:90,exs:[
+      {n:'Przysiad ze sztangą',s:4,r:'8–12',t:'Nogi i pośladki — największe partie. Priorytet.'},
+      {n:'Wyciskanie sztangi na ławce',s:3,r:'8–12',t:'Klatka i triceps. Łopatki ściągnięte.'},
+      {n:'Podciąganie na drążku',s:3,r:'6–10',t:'Plecy i biceps. Pełen zakres.'},
+      {n:'Hip Thrust ze sztangą',s:3,r:'12–15',t:'Pośladki — nie pomijaj w full body.'},
     ]},
-    {id:'si',n:'Siła Bazowa',ic:'🏋️',bg:'rgba(212,255,0,.1)',meta:'Big 4 · 5 ćwiczeń · ~65 min',rest:180,exs:[
-      {n:'Przysiad ze sztangą',s:5,r:'5',t:'Ciężka praca. Bez kompromisów.'},
-      {n:'Martwy ciąg',s:3,r:'5',t:'Jedna ciężka seria po rozgrzewce.'},
-      {n:'Wyciskanie sztangi na ławce',s:5,r:'5',t:'Łopatki ściągnięte.'},
-      {n:'OHP – wyciskanie stojąc',s:3,r:'5',t:'Najtrudniejsze ćwiczenie górnej partii.'},
-      {n:'Podciąganie na drążku',s:3,r:'max',t:'Zawsze. Nie pomijaj.'},
+    {id:'si',n:'Siła Bazowa',ic:'🏋️',bg:'rgba(212,255,0,.1)',meta:'4 ćwiczenia · ~60 min',rest:180,exs:[
+      {n:'Przysiad ze sztangą',s:5,r:'3–5',t:'Ciężka praca. Technika zawsze ponad ciężar.'},
+      {n:'Wyciskanie sztangi na ławce',s:4,r:'3–5',t:'Łopatki ściągnięte i cofnięte. Mostek.'},
+      {n:'Martwy ciąg',s:3,r:'3–5',t:'Plecy neutralne. Ciężar przy ciele.'},
+      {n:'OHP – wyciskanie stojąc',s:3,r:'5–8',t:'Najtrudniejszy ruch. Ściska rdzeń i stabilizatory.'},
     ]},
-    {id:'re',n:'Redukcja & HIIT',ic:'🔥',bg:'rgba(255,107,0,.12)',meta:'Spalanie · 6 ćwiczeń · ~50 min',rest:60,exs:[
-      {n:'Squat Jump',s:4,r:'30 sek',t:'Maksymalnie szybko. Miękkie lądowanie.'},
-      {n:'Wiosłowanie hantlem',s:3,r:'12/rękę',t:'Utrzymaj siłę podczas redukcji.'},
-      {n:'Burpees',s:4,r:'10',t:'Pełen zakres.'},
-      {n:'Hip Thrust z gumą',s:3,r:'15',t:'Zachowaj mięśnie.'},
-      {n:'Mountain Climbers',s:4,r:'40 sek',t:'Szybkie tempo. Biodra nisko.'},
-      {n:'Martwy ciąg rumuński',s:3,r:'12',t:'Siła musi zostać.'},
+    {id:'re',n:'Redukcja',ic:'🔥',bg:'rgba(255,107,0,.12)',meta:'4 ćwiczenia · ~40 min',rest:60,exs:[
+      {n:'Przysiad ze sztangą',s:4,r:'8–10',t:'Zachowaj siłę podczas redukcji.'},
+      {n:'Wyciskanie sztangi na ławce',s:3,r:'8–10',t:'Nie trać masy mięśniowej.'},
+      {n:'Podciąganie na drążku',s:3,r:'max',t:'Plecy i biceps w jednym ćwiczeniu.'},
+      {n:'Hip Thrust ze sztangą',s:3,r:'12–15',t:'Pośladki — najważniejszy mięsień do zachowania.'},
     ]},
   ]
 };
@@ -937,8 +925,16 @@ function doneSet(ei,si,totEx,rest){
   if(allDone){const c=document.getElementById('ec'+ei);c.classList.remove('ea');c.classList.add('ed');const nx=document.getElementById('ec'+(ei+1));if(nx){nx.classList.add('op','ea');setTimeout(()=>nx.scrollIntoView({behavior:'smooth',block:'start'}),300);}}
   if(done>=tot)setTimeout(()=>document.getElementById('fd').classList.add('op'),800);
 }
-function updSub(){const l=tot-done;document.getElementById('wos').textContent=l>0?l+' serii pozostało':'Wszystkie serie ✓ 🎉';document.getElementById('wopg').textContent=done+'/'+tot;}
-function exitWO(){stopT();document.getElementById('td').classList.remove('op');document.getElementById('fd').classList.remove('op');show('App');showTab('home');}
+function updSub(){
+  const l=tot-done;
+  document.getElementById('wos').textContent=l>0?l+' serii pozostało':'Wszystkie serie ✓ 🎉';
+  document.getElementById('wopg').textContent=done+'/'+tot;
+  // progress bar in header
+  let pb=document.getElementById('wo-prog');
+  if(!pb){pb=document.createElement('div');pb.id='wo-prog';pb.style.cssText='position:fixed;top:0;left:0;height:3px;background:var(--a);z-index:201;transition:width .3s ease;pointer-events:none';document.body.appendChild(pb);}
+  pb.style.width=tot>0?(done/tot*100)+'%':'0%';
+}
+function exitWO(){stopT();document.getElementById('td').classList.remove('op');document.getElementById('fd').classList.remove('op');const pb=document.getElementById('wo-prog');if(pb)pb.remove();show('App');showTab('home');}
 function finWO(){
   stopT();sfxDone();
   const mins=Math.max(1,Math.round((Date.now()-wStart)/60000));
@@ -948,7 +944,7 @@ function finWO(){
   document.getElementById('sum-sb').textContent=WO.n+' · '+mins+' min';
   const sp=document.getElementById('sum-prs');sp.innerHTML='';
   WO.exs.forEach(ex=>{const pr=U.prs?.[ex.n];if(pr&&Date.now()-pr.date<120000){const d=document.createElement('div');d.className='sum-pri';d.innerHTML=`<div class="sum-prn">🏆 ${ex.n}</div><div class="sum-prv">${pr.kg}kg × ${pr.reps}</div>`;sp.appendChild(d);}});
-  document.getElementById('fd').classList.remove('op');show('S');
+  document.getElementById('fd').classList.remove('op');const _pb=document.getElementById('wo-prog');if(_pb)_pb.remove();show('S');
 }
 function goHome(){loadApp();show('App');showTab('home');}
 
@@ -1032,6 +1028,29 @@ function installApp(){if(deferredInstall){deferredInstall.prompt();deferredInsta
 /* INIT */
 (()=>{const saved=localStorage.getItem('fp_cur');if(saved){const u=gU(saved);if(u){U=u;afterAuth();return;}}show('L');})();
 setInterval(()=>{if(U)localStorage.setItem('fp_cur',U.email);},3000);
+</script>
+
+<script>
+// PWA Manifest
+(function(){
+  const mf={name:'FitPlan',short_name:'FitPlan',description:'Tracker treningowy',start_url:'.',display:'standalone',background_color:'#080808',theme_color:'#080808',orientation:'portrait-primary',icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='115' fill='%23080808'/%3E%3Ctext y='400' font-size='380' x='55'%3E%F0%9F%92%AA%3C/text%3E%3C/svg%3E",sizes:'512x512',type:'image/svg+xml',purpose:'any maskable'}]};
+  const b=new Blob([JSON.stringify(mf)],{type:'application/manifest+json'});
+  document.getElementById('mfst').href=URL.createObjectURL(b);
+})();
+// Service Worker
+if('serviceWorker' in navigator){
+  const sw=`const V='fp-v2';
+self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(['./'])));self.skipWaiting();});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))));self.clients.claim();});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{if(res.status===200){const c=res.clone();caches.open(V).then(cache=>cache.put(e.request,c));}return res;})));});`;
+  const b=new Blob([sw],{type:'text/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(b)).catch(()=>{});
+}
+// Install prompt
+let _dip=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_dip=e;document.querySelectorAll('#btn-install').forEach(b=>b.style.display='flex');});
+window.addEventListener('appinstalled',()=>{_dip=null;document.querySelectorAll('#btn-install').forEach(b=>b.style.display='none');});
+function installApp(){if(_dip){_dip.prompt();_dip.userChoice.then(()=>{_dip=null;});}else if(/iphone|ipad|ipod/i.test(navigator.userAgent)){alert('Na iOS:\n\n1. Dotknij 📤 Udostępnij\n2. Wybierz „Dodaj do ekranu głównego"\n3. Dotknij „Dodaj"');}else{alert('Aby zainstalować:\nMenu przeglądarki (⋮) → Zainstaluj aplikację\nlub Dodaj do ekranu głównego');}}
 </script>
 
 </body>
